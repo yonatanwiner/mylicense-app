@@ -12,7 +12,7 @@
 <title>MyLicense 🚗</title>
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@700;800;900&family=Heebo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
 
-<script>/* storage via localStorage */</script>
+<script>/* storage via JSONBin */</script>
 
 <style>
 :root{
@@ -440,20 +440,56 @@ body{display:flex;justify-content:center;font-family:'Heebo',sans-serif;color:va
 </div>
 
 <script>
-// STORAGE
+// STORAGE - IndexedDB for reliable iOS persistence
+let _db = null;
+
+function initDB(){
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open('mylicense_db', 1);
+    req.onupgradeneeded = e => {
+      e.target.result.createObjectStore('data');
+    };
+    req.onsuccess = e => { _db = e.target.result; resolve(); };
+    req.onerror = reject;
+  });
+}
+
 function saveAll(){
+  // Save to both localStorage (fast) and IndexedDB (persistent)
+  try { localStorage.setItem('ml_backup', JSON.stringify(S)); } catch(e){}
+  if(!_db) return;
   try {
-    localStorage.setItem('mylicense', JSON.stringify(S));
-    showSaved();
+    const tx = _db.transaction('data', 'readwrite');
+    tx.objectStore('data').put(JSON.stringify(S), 'state');
+    tx.oncomplete = () => showSaved();
   } catch(e){ console.error('Save error', e); }
 }
+
 function loadAll(){
+  // Try IndexedDB first, fall back to localStorage
+  if(_db){
+    try {
+      const tx = _db.transaction('data', 'readonly');
+      const req = tx.objectStore('data').get('state');
+      req.onsuccess = e => {
+        if(e.target.result){
+          window._onLoad(JSON.parse(e.target.result));
+        } else {
+          // Try localStorage backup
+          tryLocalStorage();
+        }
+      };
+      req.onerror = () => tryLocalStorage();
+    } catch(e){ tryLocalStorage(); }
+  } else {
+    tryLocalStorage();
+  }
+}
+
+function tryLocalStorage(){
   try {
-    const raw = localStorage.getItem('mylicense');
-    if(raw){
-      const d = JSON.parse(raw);
-      window._onLoad(d);
-    }
+    const raw = localStorage.getItem('ml_backup');
+    if(raw) window._onLoad(JSON.parse(raw));
   } catch(e){ console.error('Load error', e); }
 }
 
@@ -715,12 +751,11 @@ function celebrate(em,t,s){
   setTimeout(()=>c.classList.remove('on'),2600);
 }
 
-// Check if running as PWA
-const isStandalone = window.navigator.standalone === true || window.matchMedia('(display-mode: standalone)').matches;
-console.log('Running as PWA:', isStandalone);
-
-// Load data on startup
-loadAll();
+// Initialize DB then load data
+initDB().then(() => loadAll()).catch(() => {
+  // IndexedDB failed, try localStorage
+  tryLocalStorage();
+});
 </script>
 </div>
 </body>
