@@ -10,57 +10,7 @@
 <title>MyLicense 🚗</title>
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@700;800;900&family=Heebo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
 
-<script type="module">
-  import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-  import { getDatabase, ref, set, push, onValue, get } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js';
-  const app = initializeApp({
-    apiKey: "AIzaSyDg-duYytMJito9hY9cDqZavBztPjqeVGI",
-    authDomain: "mylicense-app.firebaseapp.com",
-    databaseURL: "https://mylicense-app-default-rtdb.firebaseio.com",
-    projectId: "mylicense-app",
-    storageBucket: "mylicense-app.firebasestorage.app",
-    messagingSenderId: "691283527272",
-    appId: "1:691283527272:web:7a2a52a43d3d470e565ddd"
-  });
-  const db = getDatabase(app);
-  window._db = db;
-  window._ref = ref;
-  window._set = set;
-  window._push = push;
-
-  let loaded = false;
-  // Use get() for initial load - more reliable than onValue for first load
-  get(ref(db,'adam')).then(snap => {
-    const d = snap.val();
-    if (d) {
-      loaded = true;
-      window._onLoad(d);
-    } else {
-      // First time user - set defaults
-      const defaults = {
-        settings:{price:220,total:28},
-        teacher:{name:'',school:'',phone:'',price:220,car:'',gear:'אוטומט'},
-        lessons:{}, schedule:{}, milestones:{},
-        profile:{name:'',age:17,city:'',av:'😎'}
-      };
-      set(ref(db,'adam'), defaults).then(() => {
-        loaded = true;
-        window._onLoad(defaults);
-      });
-    }
-  }).catch(err => {
-    console.error('Firebase load error:', err);
-    document.getElementById('fb-status').textContent = '⚠️ שגיאת חיבור';
-    document.getElementById('fb-status').style.color = '#FF6B35';
-  });
-
-  // Also listen for realtime updates (after initial load)
-  onValue(ref(db,'adam'), snap => {
-    if (!loaded) return; // skip before initial load completes
-    const d = snap.val();
-    if (d) window._onLoad(d);
-  });
-</script>
+<script>/* storage via localStorage */</script>
 
 <style>
 :root{
@@ -281,8 +231,7 @@ body{display:flex;justify-content:center;font-family:'Heebo',sans-serif;color:va
 .cel-s{font-size:14px;color:var(--mt);line-height:1.6;}
 
 /* FB dot */
-.fb-dot{width:7px;height:7px;border-radius:50%;background:var(--gn);display:inline-block;animation:blink 2s infinite;vertical-align:middle;margin-left:3px;}
-@keyframes blink{0%,100%{opacity:1}50%{opacity:0.3}}
+
 </style>
 </head>
 <body>
@@ -295,7 +244,7 @@ body{display:flex;justify-content:center;font-family:'Heebo',sans-serif;color:va
     <div><div class="logo-my">MY</div><div class="logo-lic">License</div></div>
   </div>
   <div style="display:flex;align-items:center;gap:10px;">
-    <span id="fb-status" style="font-size:11px;color:var(--gn);font-weight:700;"><span class="fb-dot"></span>שמור</span>
+    <span id="save-status" style="font-size:11px;color:var(--gn);font-weight:700;opacity:0;transition:opacity 0.3s;">✓ נשמר</span>
     <div id="hdr-av" onclick="openS('profile-sheet')" style="width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,var(--y),var(--o));display:flex;align-items:center;justify-content:center;font-size:22px;cursor:pointer;flex-shrink:0;">😎</div>
   </div>
 </div>
@@ -489,6 +438,23 @@ body{display:flex;justify-content:center;font-family:'Heebo',sans-serif;color:va
 </div>
 
 <script>
+// STORAGE
+function saveAll(){
+  try {
+    localStorage.setItem('mylicense', JSON.stringify(S));
+    showSaved();
+  } catch(e){ console.error('Save error', e); }
+}
+function loadAll(){
+  try {
+    const raw = localStorage.getItem('mylicense');
+    if(raw){
+      const d = JSON.parse(raw);
+      window._onLoad(d);
+    }
+  } catch(e){ console.error('Load error', e); }
+}
+
 // STATE
 let S = {
   profile:{name:'Adam',age:17,city:'תל אביב',av:'😎'},
@@ -507,7 +473,7 @@ const todayStr=NOW.toISOString().split('T')[0];
 document.getElementById('ldate').value=todayStr;
 document.getElementById('sch-date').value=todayStr;
 
-// FIREBASE LOAD
+// LOAD DATA
 window._onLoad=function(d){
   if(d.settings){S.settings=d.settings;document.getElementById('price-inp').value=d.settings.price||220;document.getElementById('total-inp').value=d.settings.total||28;}
   if(d.teacher){S.teacher=d.teacher;if(d.teacher.price)S.settings.price=d.teacher.price;applyTeacher();}
@@ -557,7 +523,7 @@ function toggleMs(id){
   const isDone=el.classList.contains('done');
   if(isDone){el.classList.remove('done');S.milestones[id]=false;}
   else{el.classList.add('done');S.milestones[id]=true;}
-  if(window._db) window._set(window._ref(window._db,'adam/milestones'),S.milestones).then(()=>showToast());
+  saveAll();
   if(!isDone) celebrate('🏆','אבן דרך!',el.querySelector('.ms-lbl').textContent);
 }
 
@@ -601,18 +567,15 @@ function saveSch(){
   const date=document.getElementById('sch-date').value;
   const note=document.getElementById('sch-note').value;
   const item={type:schType,date,note,ts:Date.now()};
-  if(window._db){
-    const r=window._push(window._ref(window._db,'adam/schedule'));
-    window._set(r,item).then(()=>showToast());
-    S.schedule[r.key]=item;
-  } else {S.schedule['s'+Date.now()]=item;}
+  S.schedule['s'+Date.now()]=item;
+  saveAll();
   renderSchedule();
   const titles={lesson:'שיעור',theory:'תיאוריה',test:'טסט'};
   celebrate('📅','נוסף ללוח!',titles[schType]);
 }
 function delSch(key){
   delete S.schedule[key];
-  if(window._db) window._set(window._ref(window._db,'adam/schedule'),S.schedule).then(()=>showToast());
+  saveAll();
   renderSchedule();
 }
 function pickType(el,type){
@@ -647,11 +610,8 @@ function saveLesson(){
   const ds=p[2]+'.'+p[1]+'.'+p[0].slice(2);
   const n=lnum;
   const lesson={num:n,date:ds,mood,ts:Date.now()};
-  if(window._db){
-    const r=window._push(window._ref(window._db,'adam/lessons'));
-    window._set(r,lesson).then(()=>showToast());
-    S.lessons[r.key]=lesson;
-  } else {S.lessons['l'+Date.now()]=lesson;}
+  S.lessons['l'+Date.now()]=lesson;
+  saveAll();
   renderLessons();updateUI();
   celebrate('🚗✨','שיעור '+n+' נרשם!','ממשיך קדימה 🔥');
 }
@@ -680,10 +640,7 @@ function saveTeacher(){
   S.teacher={name:document.getElementById('ti-name').value,phone:document.getElementById('ti-phone').value,price,car,gear:selGear};
   S.settings.price=price;
   closeS('teacher-sheet');applyTeacher();
-  if(window._db){
-    window._set(window._ref(window._db,'adam/teacher'),S.teacher).then(()=>showToast());
-    window._set(window._ref(window._db,'adam/settings'),S.settings);
-  }
+  saveAll();
   updateUI();renderLessons();
   celebrate('🧑‍🏫','המורה עודכן!',S.teacher.name+' · '+selGear+' · ₪'+price);
 }
@@ -709,10 +666,7 @@ function saveProfile(){
   S.profile={name:document.getElementById('pi-name').value,age:parseInt(document.getElementById('pi-age').value)||17,city:document.getElementById('pi-city').value,av:selAv};
   S.settings.total=parseInt(document.getElementById('total-inp').value)||28;
   closeS('profile-sheet');applyProfile();
-  if(window._db){
-    window._set(window._ref(window._db,'adam/profile'),S.profile).then(()=>showToast());
-    window._set(window._ref(window._db,'adam/settings'),S.settings);
-  }
+  saveAll();
   updateUI();
   celebrate('👤','פרופיל עודכן!',S.profile.name+' 🎉');
 }
@@ -740,6 +694,13 @@ function bgClose(e,id){if(e.target===document.getElementById(id))closeS(id);}
 function adjN(d){lnum=Math.max(1,lnum+d);document.getElementById('lnum').textContent=lnum;}
 function pickM(el){document.querySelectorAll('#lesson-sheet .mood').forEach(m=>m.classList.remove('on'));el.classList.add('on');}
 
+// SAVED INDICATOR
+function showSaved(){
+  const el=document.getElementById('save-status');
+  el.style.opacity='1';
+  setTimeout(()=>el.style.opacity='0', 1500);
+}
+
 // TOAST
 function showToast(){const t=document.getElementById('toast');t.classList.add('on');setTimeout(()=>t.classList.remove('on'),1800);}
 
@@ -751,6 +712,9 @@ function celebrate(em,t,s){
   const c=document.getElementById('cel');c.classList.add('on');
   setTimeout(()=>c.classList.remove('on'),2600);
 }
+
+// Load data on startup
+loadAll();
 </script>
 </div>
 </body>
