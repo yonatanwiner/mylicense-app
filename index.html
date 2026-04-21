@@ -733,8 +733,8 @@ function celebrate(em,t,s){
   setTimeout(()=>c.classList.remove('on'),2600);
 }
 
-// Load data on startup
-loadFromFirebase();
+// Load data after DOM is ready
+document.addEventListener('DOMContentLoaded', loadFromFirebase);
 </script>
 </div>
 </body>
