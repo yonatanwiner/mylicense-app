@@ -733,9 +733,28 @@ function celebrate(em,t,s){
   setTimeout(()=>c.classList.remove('on'),2600);
 }
 
-// Load data - try immediately and also after short delay
-loadFromFirebase();
-setTimeout(loadFromFirebase, 1000);
+// Load data with debug
+function debugLoad(){
+  fetch(FB_URL)
+    .then(r=>r.json())
+    .then(d=>{
+      if(d && d.lessons && Object.keys(d.lessons).length > 0){
+        window._onLoad(d);
+        document.getElementById('save-status').textContent = '✓ ' + Object.keys(d.lessons).length + ' שיעורים';
+        document.getElementById('save-status').style.opacity = '1';
+      } else {
+        document.getElementById('save-status').textContent = '⚠️ אין נתונים';
+        document.getElementById('save-status').style.opacity = '1';
+        window._onLoad(d || {});
+      }
+    })
+    .catch(e=>{
+      document.getElementById('save-status').textContent = '❌ ' + e.message;
+      document.getElementById('save-status').style.opacity = '1';
+    });
+}
+debugLoad();
+setTimeout(debugLoad, 2000);
 </script>
 </div>
 </body>
