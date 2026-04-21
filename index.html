@@ -12,47 +12,7 @@
 <title>MyLicense 🚗</title>
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@700;800;900&family=Heebo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
 
-<script type="module">
-import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-import { getDatabase, ref, set, push, onValue } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js';
 
-const app = initializeApp({
-  apiKey: "AIzaSyDg-duYytMJito9hY9cDqZavBztPjqeVGI",
-  authDomain: "mylicense-app.firebaseapp.com",
-  databaseURL: "https://mylicense-app-default-rtdb.firebaseio.com",
-  projectId: "mylicense-app",
-  storageBucket: "mylicense-app.firebasestorage.app",
-  messagingSenderId: "691283527272",
-  appId: "1:691283527272:web:7a2a52a43d3d470e565ddd"
-});
-
-const db = getDatabase(app);
-window._fbRef = (path) => ref(db, path);
-window._fbSet = set;
-window._fbPush = push;
-
-onValue(ref(db, 'adam'), (snap) => {
-  const d = snap.val();
-  if (d) {
-    try { localStorage.setItem('ml', JSON.stringify(d)); } catch(e) {}
-    window._onLoad(d);
-  } else {
-    const defaults = {
-      settings:{price:220,total:28},
-      teacher:{name:'',phone:'',price:220,car:'',gear:'אוטומט'},
-      lessons:{}, schedule:{}, milestones:{},
-      profile:{name:'',age:17,city:'',av:'😎'}
-    };
-    set(ref(db,'adam'), defaults);
-  }
-}, (error) => {
-  console.log('Firebase offline, using local backup');
-  try {
-    const raw = localStorage.getItem('ml');
-    if (raw) window._onLoad(JSON.parse(raw));
-  } catch(e) {}
-});
-</script>
 
 <style>
 :root{
@@ -480,13 +440,39 @@ body{display:flex;justify-content:center;font-family:'Heebo',sans-serif;color:va
 </div>
 
 <script>
-// STORAGE - Firebase primary, localStorage backup
+// STORAGE - Firebase REST API (bypasses module scope issues)
+const FB_URL = 'https://mylicense-app-default-rtdb.firebaseio.com/adam.json';
+
 function saveAll(){
+  // Save to localStorage immediately
   try { localStorage.setItem('ml', JSON.stringify(S)); } catch(e){}
-  if(window._fbSet && window._fbRef){
-    window._fbSet(window._fbRef('adam'), S).catch(e => console.log('FB save error:', e));
-  }
-  showSaved();
+  // Save to Firebase via REST API - no module scope issues
+  fetch(FB_URL, {
+    method: 'PUT',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify(S)
+  }).then(()=>showSaved()).catch(e=>{ showSaved(); console.log('FB error:', e); });
+}
+
+function loadFromFirebase(){
+  fetch(FB_URL)
+    .then(r=>r.json())
+    .then(d=>{
+      if(d && typeof d === 'object'){
+        try { localStorage.setItem('ml', JSON.stringify(d)); } catch(e){}
+        window._onLoad(d);
+      } else {
+        loadFromLocal();
+      }
+    })
+    .catch(()=>loadFromLocal());
+}
+
+function loadFromLocal(){
+  try {
+    const raw = localStorage.getItem('ml');
+    if(raw) window._onLoad(JSON.parse(raw));
+  } catch(e){}
 }
 
 // STATE
@@ -747,8 +733,8 @@ function celebrate(em,t,s){
   setTimeout(()=>c.classList.remove('on'),2600);
 }
 
-// Data loads via Firebase onValue listener above
-// Fallback already handled in the Firebase error callback
+// Load data on startup
+loadFromFirebase();
 </script>
 </div>
 </body>
