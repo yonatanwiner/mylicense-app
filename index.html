@@ -12,7 +12,7 @@
 
 <script type="module">
   import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-  import { getDatabase, ref, set, push, onValue } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js';
+  import { getDatabase, ref, set, push, onValue, get } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js';
   const app = initializeApp({
     apiKey: "AIzaSyDg-duYytMJito9hY9cDqZavBztPjqeVGI",
     authDomain: "mylicense-app.firebaseapp.com",
@@ -27,14 +27,38 @@
   window._ref = ref;
   window._set = set;
   window._push = push;
+
+  let loaded = false;
+  // Use get() for initial load - more reliable than onValue for first load
+  get(ref(db,'adam')).then(snap => {
+    const d = snap.val();
+    if (d) {
+      loaded = true;
+      window._onLoad(d);
+    } else {
+      // First time user - set defaults
+      const defaults = {
+        settings:{price:220,total:28},
+        teacher:{name:'',school:'',phone:'',price:220,car:'',gear:'אוטומט'},
+        lessons:{}, schedule:{}, milestones:{},
+        profile:{name:'',age:17,city:'',av:'😎'}
+      };
+      set(ref(db,'adam'), defaults).then(() => {
+        loaded = true;
+        window._onLoad(defaults);
+      });
+    }
+  }).catch(err => {
+    console.error('Firebase load error:', err);
+    document.getElementById('fb-status').textContent = '⚠️ שגיאת חיבור';
+    document.getElementById('fb-status').style.color = '#FF6B35';
+  });
+
+  // Also listen for realtime updates (after initial load)
   onValue(ref(db,'adam'), snap => {
+    if (!loaded) return; // skip before initial load completes
     const d = snap.val();
     if (d) window._onLoad(d);
-    else window._set(ref(db,'adam'), {
-      settings:{price:220,total:28},
-      teacher:{name:'רונן כהן',school:'הכביש הישר',phone:'050-1234567'},
-      lessons:{}, schedule:{}, milestones:{}
-    });
   });
 </script>
 
@@ -271,7 +295,7 @@ body{display:flex;justify-content:center;font-family:'Heebo',sans-serif;color:va
     <div><div class="logo-my">MY</div><div class="logo-lic">License</div></div>
   </div>
   <div style="display:flex;align-items:center;gap:10px;">
-    <span style="font-size:11px;color:var(--gn);font-weight:700;"><span class="fb-dot"></span>שמור</span>
+    <span id="fb-status" style="font-size:11px;color:var(--gn);font-weight:700;"><span class="fb-dot"></span>שמור</span>
     <div id="hdr-av" onclick="openS('profile-sheet')" style="width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,var(--y),var(--o));display:flex;align-items:center;justify-content:center;font-size:22px;cursor:pointer;flex-shrink:0;">😎</div>
   </div>
 </div>
