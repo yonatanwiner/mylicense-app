@@ -427,6 +427,9 @@ body{display:flex;justify-content:center;font-family:'Heebo',sans-serif;color:va
   </div>
 </div>
 
+<!-- DEBUG -->
+<div id="debug-btn" onclick="testLoad()" style="position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:red;color:white;padding:10px 20px;border-radius:20px;font-weight:900;font-size:14px;z-index:999;cursor:pointer;">🔄 טען נתונים</div>
+
 <!-- TOAST -->
 <div class="toast" id="toast">✓ נשמר</div>
 
@@ -495,7 +498,7 @@ document.getElementById('sch-date').value=todayStr;
 
 // LOAD DATA
 window._onLoad=function(d){
-  if(d.settings){S.settings=d.settings;document.getElementById('price-inp').value=d.settings.price||220;document.getElementById('total-inp').value=d.settings.total||28;}
+  if(d.settings){S.settings=d.settings;const pi=document.getElementById('price-inp');const ti=document.getElementById('total-inp');if(pi)pi.value=d.settings.price||220;if(ti)ti.value=d.settings.total||28;}
   if(d.teacher){S.teacher=d.teacher;if(d.teacher.price)S.settings.price=d.teacher.price;applyTeacher();}
   if(d.profile){S.profile=d.profile;applyProfile();}
   if(d.lessons){S.lessons=d.lessons;renderLessons();}
@@ -713,6 +716,22 @@ function closeS(id){document.getElementById(id).classList.remove('on');}
 function bgClose(e,id){if(e.target===document.getElementById(id))closeS(id);}
 function adjN(d){lnum=Math.max(1,lnum+d);document.getElementById('lnum').textContent=lnum;}
 function pickM(el){document.querySelectorAll('#lesson-sheet .mood').forEach(m=>m.classList.remove('on'));el.classList.add('on');}
+
+// DEBUG LOAD
+function testLoad(){
+  const url = 'https://mylicense-app-default-rtdb.firebaseio.com/adam.json';
+  fetch(url)
+    .then(r=>r.json())
+    .then(d=>{
+      if(d && d.lessons){
+        alert('✅ נמצאו ' + Object.keys(d.lessons).length + ' שיעורים ב-Firebase!');
+        window._onLoad(d);
+      } else {
+        alert('❌ אין נתונים ב-Firebase: ' + JSON.stringify(d));
+      }
+    })
+    .catch(e=>alert('❌ שגיאה: ' + e.message));
+}
 
 // SAVED INDICATOR
 function showSaved(){
