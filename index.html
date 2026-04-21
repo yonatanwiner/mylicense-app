@@ -16,10 +16,10 @@
 
 <style>
 :root{
-  --y:#FFE500;--o:#FF6B35;--p:#FF3D87;--b:#00C2FF;
-  --dk:#0A0A0F;--cd:#13131A;--c2:#1C1C26;
-  --tx:#FFF;--mt:#888899;--br:#2A2A38;
-  --gn:#00E676;--go:#F5C842;--am:#E8934A;
+  --y:#FFE500;--o:#FF8C42;--p:#FF3D87;--b:#4DA6FF;
+  --dk:#0F1117;--cd:#1A1D27;--c2:#232736;
+  --tx:#F0F2FF;--mt:#8890AA;--br:#2E3347;
+  --gn:#2ECC71;--go:#FFB347;--am:#FF8C42;
 }
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
 html,body{height:100%;background:#000;}
@@ -369,11 +369,7 @@ body{display:flex;justify-content:center;font-family:'Heebo',sans-serif;color:va
     <div class="sh"></div>
     <div class="shdr"><div class="stitle">🚗 הוסף שיעור</div><button class="sclose" onclick="closeS('lesson-sheet')">✕</button></div>
     <div class="lbl">מספר שיעור</div>
-    <div class="num-row">
-      <button class="nbtn" onclick="adjN(1)">+</button>
-      <div class="nval" id="lnum">1</div>
-      <button class="nbtn" onclick="adjN(-1)">−</button>
-    </div>
+    <input class="inp" type="number" id="lnum" value="1" min="1" max="100" style="font-size:22px;font-weight:900;color:var(--go);text-align:center;margin-bottom:16px;">
     <div class="lbl">תאריך</div>
     <input class="inp" type="date" id="ldate">
     <div class="lbl">איך היה?</div>
@@ -399,6 +395,8 @@ body{display:flex;justify-content:center;font-family:'Heebo',sans-serif;color:va
     </div>
     <div class="lbl">תאריך</div>
     <input class="inp" type="date" id="sch-date">
+    <div class="lbl">שעה (אופציונלי)</div>
+    <input class="inp" type="time" id="sch-time" style="margin-bottom:16px">
     <div class="lbl">הערה (אופציונלי)</div>
     <input class="inp" type="text" id="sch-note" placeholder="למשל: עם רונן, תחנה מרכזית...">
     <button class="savebtn" onclick="saveSch()">הוסף ✓</button>
@@ -411,13 +409,13 @@ body{display:flex;justify-content:center;font-family:'Heebo',sans-serif;color:va
     <div class="sh"></div>
     <div class="shdr"><div class="stitle">🧑‍🏫 פרטי המורה</div><button class="sclose" onclick="closeS('teacher-sheet')">✕</button></div>
     <div class="lbl">שם המורה</div>
-    <input class="inp" type="text" id="ti-name" placeholder="שם המורה" value="רונן כהן">
+    <input class="inp" type="text" id="ti-name" placeholder="שם המורה">
     <div class="lbl">טלפון</div>
-    <input class="inp" type="tel" id="ti-phone" placeholder="050-0000000" value="050-1234567">
+    <input class="inp" type="tel" id="ti-phone" placeholder="050-0000000">
     <div class="lbl">מחיר לשיעור</div>
     <div class="prow"><div class="plbl">עלות לשיעור אחד</div><div style="display:flex;align-items:center;gap:4px"><input class="pinp" type="number" id="ti-price" value="220" min="50" max="999"><span style="font-size:16px;font-weight:700;color:var(--go)">₪</span></div></div>
     <div class="lbl">רכב</div>
-    <input class="inp" type="text" id="ti-car" placeholder="למשל: טויוטה קורולה 2022">
+    <input class="inp" type="text" id="ti-car" placeholder="דגם הרכב">
     <div class="lbl">תיבת הילוכים</div>
     <div class="type-row" style="margin-bottom:20px">
       <div class="ttype on" id="gear-auto" onclick="pickGear(this,'אוטומט')">🔄 אוטומט</div>
@@ -529,7 +527,7 @@ function updateUI(){
   if(cnt>=20&&!S.milestones['ms-20']){S.milestones['ms-20']=true;document.getElementById('ms-20').classList.add('done');}
 
   lnum=cnt+1;
-  document.getElementById('lnum').textContent=lnum;
+  const lnumEl=document.getElementById('lnum'); if(lnumEl) lnumEl.value=lnum;
 }
 
 // MILESTONES
@@ -575,7 +573,7 @@ function renderSchedule(){
     div.innerHTML=`<div class="sch-icon">${icons[item.type]||'📅'}</div>
       <div class="sch-info">
         <div class="sch-title">${titles[item.type]||'אירוע'}${item.note?' · '+item.note:''}</div>
-        <div class="sch-date">📅 ${dateStr}</div>
+        <div class="sch-date">📅 ${dateStr}${item.time?' · ⏰ '+item.time:''}</div>
         ${countdownTxt?`<div class="sch-countdown ${countdownClass}">${countdownTxt}</div>`:''}
       </div>
       <button class="sch-del" onclick="delSch('${key}')">✕</button>`;
@@ -585,8 +583,9 @@ function renderSchedule(){
 function saveSch(){
   closeS('sch-sheet');
   const date=document.getElementById('sch-date').value;
+  const time=document.getElementById('sch-time').value;
   const note=document.getElementById('sch-note').value;
-  const item={type:schType,date,note,ts:Date.now()};
+  const item={type:schType,date,time,note,ts:Date.now()};
   S.schedule['s'+Date.now()]=item;
   saveAll();
   renderSchedule();
@@ -604,11 +603,19 @@ function pickType(el,type){
 }
 
 // LESSONS
+function deleteLesson(key){
+  if(!confirm('למחוק את השיעור?')) return;
+  delete S.lessons[key];
+  saveAll();
+  renderLessons();
+  updateUI();
+}
+
 function renderLessons(){
   const list=document.getElementById('lessons-list');
   list.innerHTML='';
   const arr=Object.entries(S.lessons).sort((a,b)=>a[1].num-b[1].num);
-  arr.forEach(([,l])=>{
+  arr.forEach(([key,l])=>{
     const price=S.settings.price||220;
     const d=document.createElement('div');
     d.className='lesson';
@@ -618,7 +625,10 @@ function renderLessons(){
         <div class="l-meta"><span>📅 ${l.date}</span><span>⏱ 45 דק'</span></div>
         <div class="l-price">₪${price.toLocaleString()}</div>
       </div>
-      <div class="l-mood">${l.mood}</div>`;
+      <div style="display:flex;flex-direction:column;align-items:center;gap:6px;">
+        <div class="l-mood">${l.mood}</div>
+        <button onclick="deleteLesson('${key}')" style="background:none;border:none;font-size:16px;cursor:pointer;color:var(--mt);">🗑️</button>
+      </div>`;
     list.appendChild(d);
   });
 }
@@ -628,7 +638,7 @@ function saveLesson(){
   const dv=document.getElementById('ldate').value;
   const p=dv.split('-');
   const ds=p[2]+'.'+p[1]+'.'+p[0].slice(2);
-  const n=lnum;
+  const n=parseInt(document.getElementById('lnum').value)||lnum;
   const lesson={num:n,date:ds,mood,ts:Date.now()};
   S.lessons['l'+Date.now()]=lesson;
   saveAll();
@@ -711,7 +721,7 @@ function pickGear(el,g){
 function openS(id){document.getElementById(id).classList.add('on');}
 function closeS(id){document.getElementById(id).classList.remove('on');}
 function bgClose(e,id){if(e.target===document.getElementById(id))closeS(id);}
-function adjN(d){lnum=Math.max(1,lnum+d);document.getElementById('lnum').textContent=lnum;}
+// lesson number now direct input
 function pickM(el){document.querySelectorAll('#lesson-sheet .mood').forEach(m=>m.classList.remove('on'));el.classList.add('on');}
 
 // SAVED INDICATOR
