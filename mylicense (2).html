@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>MyLicense 🚗</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@700;800;900&family=Heebo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+
+<!-- Firebase SDK -->
+<script type="module">
+  import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+  import { getDatabase, ref, set, push, onValue, update } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js';
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyDg-duYytMJito9hY9cDqZavBztPjqeVGI",
+    authDomain: "mylicense-app.firebaseapp.com",
+    databaseURL: "https://mylicense-app-default-rtdb.firebaseio.com",
+    projectId: "mylicense-app",
+    storageBucket: "mylicense-app.firebasestorage.app",
+    messagingSenderId: "691283527272",
+    appId: "1:691283527272:web:7a2a52a43d3d470e565ddd",
+    measurementId: "G-0CWSSH66HZ"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getDatabase(app);
+  window._db = db;
+  window._dbRef = ref;
+  window._dbSet = set;
+  window._dbPush = push;
+  window._dbOnValue = onValue;
+  window._dbUpdate = update;
+
+  // Load data from Firebase
+  const userRef = ref(db, 'adam');
+  onValue(userRef, (snapshot) => {
+    const data = snapshot.val();
+    if (data) {
+      window._fbData = data;
+      window.loadFromFirebase(data);
+    } else {
+      // First time - init default data
+      const defaultData = {
+        settings: { pricePerLesson: 220, totalRequired: 28 },
+        lessons: {},
+        streak: 0
+      };
+      set(ref(db, 'adam'), defaultData);
+    }
+  });
+</script>
+
+<style>
+:root{
+  --y:#FFE500;--o:#FF6B35;--p:#FF3D87;--b:#00C2FF;
+  --dk:#0A0A0F;--cd:#13131A;--c2:#1C1C26;--tx:#FFF;
+  --mt:#888899;--br:#2A2A38;--gn:#00E676;
+  --go:#F5C842;--am:#E8934A;--db:#3A3020;--dm:#8A7A5A;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;overflow:hidden;background:#000;}
+body{padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom);}
+body{display:flex;justify-content:center;align-items:center;font-family:'Heebo',sans-serif;color:var(--tx);}
+.phone{width:100%;max-width:390px;height:100vh;max-height:844px;height:100dvh;background:var(--dk);overflow:hidden;position:relative;display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom);}
+@media(min-width:500px){
+  .phone{border-radius:44px;border:2px solid #222;height:90vh;}
+  body{background:linear-gradient(135deg,#050508,#0D0D20,#050508);}
+}
+.sb{height:calc(44px + env(safe-area-inset-top));display:flex;align-items:flex-end;justify-content:space-between;padding:0 22px env(safe-area-inset-top);font-size:12px;font-weight:600;color:var(--mt);flex-shrink:0;padding-bottom:8px;padding-top:calc(8px + env(safe-area-inset-top));}
+.scrwrap{flex:1;position:relative;overflow:hidden;}
+.scr{position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;opacity:0;pointer-events:none;transition:opacity 0.3s,transform 0.3s;transform:translateX(-16px);display:flex;flex-direction:column;}
+.scr::-webkit-scrollbar{display:none;}
+.scr.active{opacity:1;pointer-events:all;transform:translateX(0);}
+.bnav{height:calc(68px + env(safe-area-inset-bottom));display:flex;align-items:center;justify-content:space-around;padding:0 6px;padding-bottom:env(safe-area-inset-bottom);flex-shrink:0;border-top:1px solid var(--br);background:var(--cd);z-index:20;}
+.nb{display:flex;flex-direction:column;align-items:center;gap:3px;background:none;border:none;color:var(--mt);font-size:9px;font-weight:800;letter-spacing:0.3px;cursor:pointer;padding:5px 14px;border-radius:12px;transition:color 0.2s;text-transform:uppercase;font-family:'Heebo',sans-serif;}
+.nb.active{color:var(--y);}
+.nb svg{width:22px;height:22px;}
+
+/* SPLASH */
+.splash{position:absolute;inset:0;z-index:200;background:var(--y);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;transition:opacity 0.8s;}
+.splash.gone{opacity:0;pointer-events:none;}
+.splash-sub{font-size:13px;color:rgba(0,0,0,0.4);font-weight:700;}
+
+/* HEADER */
+.hdr{padding:12px 16px 10px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10;background:var(--dk);border-bottom:1px solid var(--br);}
+.wm{display:flex;align-items:center;gap:9px;}
+.wm-my{font-family:'Nunito',sans-serif;font-size:9px;font-weight:900;color:var(--o);letter-spacing:3px;line-height:1;}
+.wm-l{font-family:'Nunito',sans-serif;font-size:20px;font-weight:900;color:white;letter-spacing:-0.5px;line-height:1.1;}
+
+/* HERO */
+.hero{margin:13px 15px 11px;background:linear-gradient(135deg,#1A1200,#221500,#1A0800);border:1px solid var(--db);border-radius:20px;padding:16px 18px;position:relative;overflow:hidden;}
+.hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 10% 50%,rgba(245,200,66,0.13),transparent 55%);}
+.hero-inner{display:flex;align-items:center;justify-content:space-between;position:relative;z-index:2;}
+.hero-greet{font-size:20px;font-weight:900;color:#F5EDD8;line-height:1.2;}
+.hero-greet span{color:var(--go);}
+.hero-date{font-size:11px;color:var(--dm);font-weight:600;margin-top:3px;}
+
+/* ROAD */
+.road-wrap{position:relative;margin:14px 0 0;z-index:2;}
+.road-track{height:4px;background:var(--db);border-radius:2px;margin:0 4px;}
+.road-fill{height:100%;background:linear-gradient(270deg,var(--go),var(--am));border-radius:2px;width:0;transition:width 1.4s ease;margin-right:auto;margin-left:0;float:right;}
+.ms-row{display:flex;justify-content:space-between;margin-top:6px;}
+.ms-item{display:flex;flex-direction:column;align-items:center;gap:3px;}
+.ms-dot{width:25px;height:25px;border-radius:50%;background:var(--c2);border:2px solid var(--db);display:flex;align-items:center;justify-content:center;font-size:11px;margin-top:-16px;}
+.ms-dot.done{background:linear-gradient(135deg,var(--go),var(--am));border-color:var(--go);box-shadow:0 0 8px rgba(245,200,66,0.4);}
+.ms-dot.now{border-color:var(--am);animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{box-shadow:0 0 6px rgba(232,147,74,0.4);}50%{box-shadow:0 0 14px rgba(232,147,74,0.7);}}
+.ms-name{font-size:9px;font-weight:700;color:var(--dm);text-align:center;line-height:1.3;max-width:44px;}
+.ms-name.done{color:var(--go);}.ms-name.now{color:var(--am);}
+
+/* STATS */
+.stats-row{display:flex;gap:7px;padding:0 15px 12px;}
+.sc{flex:1;background:var(--cd);border:1px solid var(--br);border-radius:13px;padding:10px 7px;text-align:center;}
+.sc-big{font-size:18px;font-weight:900;color:var(--go);}
+.sc-lbl{font-size:9px;color:var(--mt);font-weight:700;text-transform:uppercase;letter-spacing:0.3px;margin-top:2px;line-height:1.3;}
+
+/* BUDGET */
+.budget-card{margin:0 15px 13px;background:var(--cd);border:1px solid var(--br);border-radius:16px;overflow:hidden;}
+.budget-top{padding:13px 14px 10px;display:flex;align-items:center;justify-content:space-between;}
+.budget-title{font-size:13px;font-weight:800;display:flex;align-items:center;gap:6px;}
+.budget-edit{font-size:11px;color:var(--go);font-weight:700;cursor:pointer;background:none;border:none;font-family:'Heebo',sans-serif;}
+.budget-bars{padding:0 14px 13px;display:flex;flex-direction:column;gap:8px;}
+.brow{display:flex;align-items:center;gap:10px;}
+.brow-label{font-size:11px;color:var(--mt);font-weight:600;width:70px;flex-shrink:0;text-align:right;}
+.brow-bar{flex:1;height:6px;background:var(--c2);border-radius:3px;overflow:hidden;}
+.brow-fill{height:100%;border-radius:3px;transition:width 1.2s ease;}
+.bf-spent{background:linear-gradient(90deg,var(--go),var(--am));}
+.bf-est{background:linear-gradient(90deg,var(--o),var(--p));}
+.brow-val{font-size:11px;font-weight:800;color:var(--tx);width:60px;flex-shrink:0;text-align:left;}
+
+/* LESSONS */
+.sec{padding:12px 17px 7px;display:flex;align-items:center;justify-content:space-between;}
+.sec-title{font-size:14px;font-weight:800;color:white;display:flex;align-items:center;gap:6px;}
+.lc{margin:0 15px 9px;background:var(--cd);border:1px solid var(--br);border-radius:15px;overflow:hidden;animation:fadein 0.3s ease;}
+@keyframes fadein{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.lc-top{padding:12px 13px;display:flex;align-items:center;gap:11px;}
+.l-num{width:38px;height:38px;border-radius:12px;background:linear-gradient(135deg,var(--go),var(--am));display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:900;color:var(--dk);flex-shrink:0;}
+.l-num.future{background:var(--c2);border:1px solid var(--br);font-size:17px;color:var(--mt);}
+.l-info{flex:1;}
+.l-title{font-size:14px;font-weight:800;color:white;}
+.l-meta{font-size:11px;color:var(--mt);margin-top:3px;display:flex;gap:8px;flex-wrap:wrap;}
+.l-soon{font-size:11px;color:var(--am);margin-top:4px;font-weight:700;}
+.l-mood{font-size:20px;}
+.add-btn{margin:4px 15px 5px;width:calc(100% - 30px);background:var(--cd);border:1.5px dashed var(--br);border-radius:13px;padding:12px;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;font-family:'Heebo',sans-serif;color:var(--mt);transition:all 0.2s;}
+.add-btn:active{border-color:var(--go);color:var(--go);}
+
+/* EXPLORE */
+.dream-card{margin:0 15px 13px;background:linear-gradient(135deg,#0D0018,#1A0030,#000820);border:1px solid rgba(168,85,247,0.3);border-radius:18px;overflow:hidden;}
+.dream-vis{width:100%;aspect-ratio:16/9;display:flex;align-items:center;justify-content:center;position:relative;cursor:pointer;}
+.dream-vis::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% 60%,rgba(0,194,255,0.12),transparent 60%);}
+.dream-glow{position:absolute;bottom:18px;left:50%;transform:translateX(-50%);width:180px;height:24px;background:rgba(0,194,255,0.15);filter:blur(16px);border-radius:50%;}
+.dream-road{position:absolute;bottom:13px;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,rgba(0,194,255,0.5),rgba(0,194,255,0.7),rgba(0,194,255,0.5),transparent);}
+.dtag{position:absolute;top:10px;right:11px;background:rgba(0,0,0,0.6);backdrop-filter:blur(8px);border:1px solid rgba(255,229,0,0.4);border-radius:9px;padding:3px 8px;font-size:11px;font-weight:700;color:var(--go);}
+.aitag{position:absolute;top:10px;left:11px;background:rgba(168,85,247,0.3);backdrop-filter:blur(8px);border:1px solid rgba(168,85,247,0.5);border-radius:9px;padding:3px 8px;font-size:10px;font-weight:800;color:#C084FC;}
+.car-picker{display:flex;gap:7px;padding:9px 13px 2px;overflow-x:auto;scrollbar-width:none;}
+.car-picker::-webkit-scrollbar{display:none;}
+.cp{flex-shrink:0;padding:6px 12px;background:var(--c2);border:1px solid var(--br);border-radius:20px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;transition:all 0.15s;}
+.cp.on{background:rgba(168,85,247,0.15);border-color:rgba(168,85,247,0.5);color:#C084FC;}
+.gen-btn{margin:9px 13px 13px;width:calc(100% - 26px);background:linear-gradient(90deg,#A855F7,#00C2FF);color:white;border:none;border-radius:12px;padding:11px;font-size:13px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;font-family:'Heebo',sans-serif;}
+.gen-spinner{display:none;position:absolute;inset:0;background:rgba(10,10,15,0.85);backdrop-filter:blur(6px);z-index:5;flex-direction:column;align-items:center;justify-content:center;gap:12px;}
+.gen-spinner.show{display:flex;}
+.spin{width:40px;height:40px;border:3px solid rgba(168,85,247,0.2);border-top-color:#A855F7;border-radius:50%;animation:sp 0.8s linear infinite;}
+@keyframes sp{to{transform:rotate(360deg)}}
+
+/* MAP */
+.map-card{margin:0 15px 13px;border-radius:18px;overflow:hidden;border:1px solid var(--br);}
+.map-inner{width:100%;height:175px;background:linear-gradient(135deg,#0a1520,#0d2030,#0a1a28);display:flex;align-items:center;justify-content:center;position:relative;cursor:pointer;overflow:hidden;}
+.map-inner::before{content:'';position:absolute;inset:0;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60'%3E%3Cpath d='M0 30 L60 30 M30 0 L30 60' stroke='%23ffffff08' stroke-width='1'/%3E%3C/svg%3E") repeat;}
+.map-route{position:absolute;top:38%;left:12%;right:12%;height:3px;background:linear-gradient(90deg,var(--go),var(--am),var(--o));border-radius:2px;box-shadow:0 0 12px rgba(245,200,66,0.5);}
+.map-route::before{content:'📍';position:absolute;top:-11px;right:-4px;font-size:16px;}
+.map-route::after{content:'🏁';position:absolute;top:-11px;left:-4px;font-size:16px;}
+.map-car{position:absolute;top:calc(38% - 8px);font-size:18px;animation:drive 3s ease-in-out infinite;}
+@keyframes drive{0%,100%{left:15%}50%{left:76%}}
+.map-footer{background:rgba(0,0,0,0.6);backdrop-filter:blur(8px);padding:9px 14px;display:flex;align-items:center;justify-content:space-between;}
+.map-open-btn{background:linear-gradient(90deg,var(--go),var(--am));color:var(--dk);border:none;border-radius:9px;padding:6px 12px;font-size:11px;font-weight:800;cursor:pointer;font-family:'Heebo',sans-serif;}
+
+/* TIPS */
+.tips-card{margin:0 15px 13px;background:var(--cd);border:1px solid var(--br);border-radius:18px;overflow:hidden;}
+.tip-slide{padding:18px 18px 10px;display:none;}
+.tip-slide.active{display:block;animation:fadein 0.25s ease;}
+.tip-num{font-size:10px;font-weight:800;color:var(--mt);text-transform:uppercase;letter-spacing:1px;margin-bottom:9px;}
+.tip-em{font-size:34px;margin-bottom:9px;display:block;}
+.tip-title{font-size:16px;font-weight:800;color:white;margin-bottom:5px;}
+.tip-text{font-size:13px;color:rgba(255,255,255,0.68);line-height:1.65;}
+.tip-footer{display:flex;align-items:center;justify-content:space-between;padding:10px 18px 16px;}
+.tip-dots{display:flex;gap:5px;}
+.tip-dot{width:6px;height:6px;border-radius:50%;background:var(--br);transition:background 0.2s;}
+.tip-dot.on{background:var(--go);}
+.tip-nav{display:flex;gap:8px;}
+.tip-nav-btn{width:32px;height:32px;border-radius:10px;background:var(--c2);border:1px solid var(--br);color:var(--tx);font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+
+/* PROFILE */
+.prof-cover{height:100px;background:linear-gradient(135deg,#1A1500,#2A0A00,#0A001A);position:relative;overflow:hidden;flex-shrink:0;}
+.prof-cover::before{content:'';position:absolute;inset:0;background:radial-gradient(circle at 20% 50%,rgba(255,229,0,0.2),transparent 50%);}
+.prof-cover-txt{opacity:0.12;font-family:'Nunito',sans-serif;font-size:26px;font-weight:900;color:white;position:absolute;bottom:10px;left:16px;}
+.prof-body{padding:0 17px 16px;margin-top:-24px;}
+.prof-av{width:65px;height:65px;border-radius:20px;background:linear-gradient(135deg,var(--y),var(--o));border:3px solid var(--dk);display:flex;align-items:center;justify-content:center;font-size:26px;margin-bottom:9px;}
+.prof-name{font-size:21px;font-weight:900;}
+.prof-handle{font-size:12px;color:var(--mt);margin-top:2px;}
+.prof-stats{display:flex;background:var(--cd);border-radius:15px;border:1px solid var(--br);overflow:hidden;margin:12px 0;}
+.pst{flex:1;text-align:center;padding:11px 6px;border-left:1px solid var(--br);}
+.pst:first-child{border-left:none;}
+.pst-num{font-size:18px;font-weight:900;background:linear-gradient(90deg,var(--y),var(--o));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.pst-lbl{font-size:9px;color:var(--mt);text-transform:uppercase;letter-spacing:0.3px;font-weight:700;margin-top:2px;}
+.ach-row{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;padding-bottom:4px;}
+.ach-row::-webkit-scrollbar{display:none;}
+.ach{flex-shrink:0;width:70px;border-radius:14px;padding:11px 7px;text-align:center;}
+.ach.done{background:rgba(255,229,0,0.05);border:1px solid rgba(255,229,0,0.4);}
+.ach.lock{background:var(--c2);border:1px solid var(--br);opacity:0.35;}
+.ach-em{font-size:22px;margin-bottom:4px;}
+.ach-lbl{font-size:9px;font-weight:700;}
+.ach.done .ach-lbl{color:var(--y);}
+.ach.lock .ach-lbl{color:var(--mt);}
+
+/* SYNC INDICATOR */
+.sync{position:fixed;top:12px;left:50%;transform:translateX(-50%);background:rgba(0,230,118,0.15);border:1px solid rgba(0,230,118,0.4);border-radius:20px;padding:5px 14px;font-size:11px;font-weight:700;color:var(--gn);z-index:500;opacity:0;transition:opacity 0.3s;pointer-events:none;}
+.sync.show{opacity:1;}
+
+/* MODALS */
+.mo{display:none;position:absolute;inset:0;background:rgba(0,0,0,0.85);backdrop-filter:blur(8px);z-index:100;align-items:flex-end;}
+.mo.open{display:flex;}
+.ms-sheet{width:100%;background:var(--cd);border-radius:24px 24px 0 0;border-top:1px solid var(--br);padding:18px 18px 36px;max-height:85%;overflow-y:auto;}
+.ms-sheet::-webkit-scrollbar{display:none;}
+.mh{width:40px;height:4px;background:var(--br);border-radius:2px;margin:0 auto 16px;}
+.mtr{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
+.mti{font-size:17px;font-weight:800;color:white;}
+.mcls{background:none;border:none;color:var(--mt);font-size:20px;cursor:pointer;}
+.mlbl{font-size:11px;font-weight:700;color:var(--mt);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;}
+.m-num-row{display:flex;align-items:center;justify-content:center;gap:20px;margin-bottom:18px;}
+.m-num-btn{width:44px;height:44px;border-radius:14px;background:var(--c2);border:1px solid var(--br);color:var(--tx);font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-weight:700;}
+.m-num-val{font-size:36px;font-weight:900;color:var(--go);min-width:60px;text-align:center;}
+.m-inp{width:100%;background:var(--c2);border:1px solid var(--br);border-radius:13px;padding:12px 14px;font-size:15px;color:var(--tx);font-family:'Heebo',sans-serif;outline:none;margin-bottom:16px;text-align:right;}
+.m-inp:focus{border-color:var(--go);}
+.mood-row{display:flex;gap:7px;margin-bottom:18px;}
+.mo-opt{flex:1;padding:10px 4px;background:var(--c2);border:1px solid var(--br);border-radius:12px;text-align:center;cursor:pointer;transition:all 0.15s;}
+.mo-opt .e{font-size:22px;display:block;margin-bottom:3px;}
+.mo-opt .n{font-size:9px;font-weight:700;color:var(--mt);}
+.mo-opt.sel{border-color:var(--go);background:rgba(245,200,66,0.08);}
+.mo-opt.sel .n{color:var(--go);}
+.svbtn{width:100%;background:linear-gradient(90deg,var(--go),var(--am));color:var(--dk);border:none;border-radius:13px;padding:14px;font-size:15px;font-weight:900;cursor:pointer;font-family:'Heebo',sans-serif;}
+.price-row{display:flex;align-items:center;gap:10px;background:var(--c2);border:1px solid var(--br);border-radius:13px;padding:10px 14px;margin-bottom:16px;}
+.price-label{font-size:13px;font-weight:700;color:white;flex:1;}
+.price-inp{background:none;border:none;color:var(--go);font-size:18px;font-weight:900;font-family:'Heebo',sans-serif;width:80px;text-align:left;outline:none;}
+
+/* CELEBRATE */
+.cel{display:none;position:absolute;inset:0;z-index:300;align-items:center;justify-content:center;background:rgba(0,0,0,0.8);}
+.cel.show{display:flex;}
+.cel-box{background:var(--cd);border:2px solid var(--go);border-radius:24px;padding:26px 30px;text-align:center;animation:pop 0.35s cubic-bezier(0.34,1.56,0.64,1);}
+@keyframes pop{from{opacity:0;transform:scale(0.7)}to{opacity:1;transform:scale(1)}}
+.cel-e{font-size:44px;margin-bottom:9px;}
+.cel-t{font-size:19px;font-weight:800;color:var(--go);margin-bottom:5px;}
+.cel-s{font-size:13px;color:var(--mt);line-height:1.6;}
+
+/* FIREBASE STATUS */
+.fb-status{font-size:10px;color:var(--gn);font-weight:700;display:flex;align-items:center;gap:4px;}
+.fb-dot{width:6px;height:6px;border-radius:50%;background:var(--gn);animation:blink 2s infinite;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0.3}}
+</style>
+</head>
+<body>
+<div class="phone">
+
+<!-- SPLASH -->
+<div class="splash" id="splash">
+  <svg width="80" height="80" viewBox="0 0 110 110"><defs><linearGradient id="sg" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#FFE500"/><stop offset="55%" stop-color="#FF6B35"/><stop offset="100%" stop-color="#FF3D87"/></linearGradient></defs><rect width="110" height="110" rx="26" fill="url(#sg)"/><ellipse cx="38" cy="28" rx="30" ry="22" fill="rgba(255,255,255,0.18)"/><polygon points="10,98 55,44 100,98" fill="rgba(0,0,0,0.22)"/><rect x="52" y="48" width="6" height="11" rx="3" fill="rgba(255,255,255,0.55)"/><rect x="52" y="63" width="6" height="11" rx="3" fill="rgba(255,255,255,0.55)"/><rect x="52" y="78" width="6" height="11" rx="3" fill="rgba(255,255,255,0.55)"/><g transform="translate(34,12)"><rect x="4" y="2" width="34" height="44" rx="7" fill="white" opacity="0.96"/><rect x="8" y="6" width="26" height="14" rx="3" fill="rgba(0,0,0,0.16)"/><rect x="8" y="26" width="26" height="12" rx="3" fill="rgba(0,0,0,0.12)"/><rect x="0" y="7" width="6" height="12" rx="3" fill="rgba(0,0,0,0.32)"/><rect x="36" y="7" width="6" height="12" rx="3" fill="rgba(0,0,0,0.32)"/><rect x="0" y="25" width="6" height="12" rx="3" fill="rgba(0,0,0,0.32)"/><rect x="36" y="25" width="6" height="12" rx="3" fill="rgba(0,0,0,0.32)"/><rect x="8" y="2" width="9" height="5" rx="2" fill="#FFE500" opacity="0.9"/><rect x="25" y="2" width="9" height="5" rx="2" fill="#FFE500" opacity="0.9"/></g></svg>
+  <svg width="126" height="44" viewBox="0 0 200 44" style="margin-top:4px"><text x="0" y="14" font-family="'Nunito',sans-serif" font-size="11" font-weight="900" fill="#FF3D87" letter-spacing="4">MY</text><text x="0" y="41" font-family="'Nunito',sans-serif" font-size="31" font-weight="900" fill="#0A0A0F" letter-spacing="-1">License</text></svg>
+  <div class="splash-sub">הדרך שלך. הסיפור שלך. 🚗</div>
+</div>
+
+<!-- SYNC TOAST -->
+<div class="sync" id="sync">✓ נשמר</div>
+
+<div class="sb">
+  <span id="clock">9:41</span>
+  <span>●●●</span>
+  <div class="fb-status"><div class="fb-dot"></div><span>Firebase</span></div>
+</div>
+
+<div class="scrwrap">
+
+<!-- ═══ מסע ═══ -->
+<div class="scr active" id="sj">
+  <div class="hdr">
+    <div class="wm">
+      <svg width="28" height="28" viewBox="0 0 110 110"><defs><linearGradient id="hg" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#FFE500"/><stop offset="55%" stop-color="#FF6B35"/><stop offset="100%" stop-color="#FF3D87"/></linearGradient></defs><rect width="110" height="110" rx="26" fill="url(#hg)"/><ellipse cx="38" cy="28" rx="30" ry="22" fill="rgba(255,255,255,0.18)"/><polygon points="10,98 55,44 100,98" fill="rgba(0,0,0,0.22)"/><rect x="52" y="48" width="6" height="11" rx="3" fill="rgba(255,255,255,0.55)"/><rect x="52" y="63" width="6" height="11" rx="3" fill="rgba(255,255,255,0.55)"/><rect x="52" y="78" width="6" height="11" rx="3" fill="rgba(255,255,255,0.55)"/><g transform="translate(34,12)"><rect x="4" y="2" width="34" height="44" rx="7" fill="white" opacity="0.96"/><rect x="8" y="6" width="26" height="14" rx="3" fill="rgba(0,0,0,0.16)"/><rect x="8" y="26" width="26" height="12" rx="3" fill="rgba(0,0,0,0.12)"/><rect x="0" y="7" width="6" height="12" rx="3" fill="rgba(0,0,0,0.32)"/><rect x="36" y="7" width="6" height="12" rx="3" fill="rgba(0,0,0,0.32)"/><rect x="0" y="25" width="6" height="12" rx="3" fill="rgba(0,0,0,0.32)"/><rect x="36" y="25" width="6" height="12" rx="3" fill="rgba(0,0,0,0.32)"/><rect x="8" y="2" width="9" height="5" rx="2" fill="#FFE500" opacity="0.9"/><rect x="25" y="2" width="9" height="5" rx="2" fill="#FFE500" opacity="0.9"/></g></svg>
+      <div><div class="wm-my">MY</div><div class="wm-l">License</div></div>
+    </div>
+    <div style="font-size:20px">😎</div>
+  </div>
+
+  <div class="hero">
+    <div class="hero-inner">
+      <div>
+        <div class="hero-greet">היי <span>Adam</span> 👋</div>
+        <div class="hero-date" id="today-date"></div>
+      </div>
+      <div style="font-size:34px;filter:drop-shadow(0 0 10px rgba(245,200,66,0.5))">🚗</div>
+    </div>
+    <div class="road-wrap">
+      <div class="road-track"><div class="road-fill" id="rfl"></div></div>
+      <div class="ms-row">
+        <div class="ms-item"><div class="ms-dot">🎉</div><div class="ms-name">רישיון!</div></div>
+        <div class="ms-item"><div class="ms-dot">🧪</div><div class="ms-name">טסט</div></div>
+        <div class="ms-item"><div class="ms-dot">📝</div><div class="ms-name">תיאוריה</div></div>
+        <div class="ms-item"><div class="ms-dot now">🚗</div><div class="ms-name now">שיעורים<br><span id="prog-lbl">0/28</span></div></div>
+        <div class="ms-item"><div class="ms-dot done">✓</div><div class="ms-name done">קיבלת<br>טופס</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="stats-row">
+    <div class="sc"><div class="sc-big" id="st-lessons">0</div><div class="sc-lbl">שיעורים</div></div>
+    <div class="sc"><div class="sc-big" id="st-rem">28</div><div class="sc-lbl">נשארו</div></div>
+    <div class="sc"><div class="sc-big" id="st-spent">₪0</div><div class="sc-lbl">הוצאתי</div></div>
+    <div class="sc"><div class="sc-big" id="st-pct">0%</div><div class="sc-lbl">מהדרך</div></div>
+  </div>
+
+  <div class="budget-card">
+    <div class="budget-top">
+      <div class="budget-title">💰 תקציב רישיון</div>
+      <button class="budget-edit" onclick="openMo('bm')">ערוך מחיר ✏️</button>
+    </div>
+    <div class="budget-bars">
+      <div class="brow">
+        <div class="brow-label">שולם עד עכשיו</div>
+        <div class="brow-bar"><div class="brow-fill bf-spent" id="bar-spent" style="width:0%"></div></div>
+        <div class="brow-val" id="bv-spent">₪0</div>
+      </div>
+      <div class="brow">
+        <div class="brow-label">סה"כ משוער</div>
+        <div class="brow-bar"><div class="brow-fill bf-est" style="width:100%"></div></div>
+        <div class="brow-val" id="bv-total">₪6,160</div>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:4px;">
+        <div style="font-size:11px;color:var(--mt)">נשאר לשלם</div>
+        <div style="font-size:14px;font-weight:800;color:var(--p)" id="bv-left">₪6,160</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sec"><div class="sec-title">📋 השיעורים שלי</div></div>
+  <div id="lessons-list"></div>
+  <button class="add-btn" onclick="openMo('lm')">+ הוסף שיעור</button>
+  <div style="height:14px"></div>
+</div>
+
+<!-- ═══ גלה ═══ -->
+<div class="scr" id="se">
+  <div class="hdr">
+    <div class="wm">
+      <svg width="28" height="28" viewBox="0 0 110 110"><defs><linearGradient id="eg" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#FFE500"/><stop offset="55%" stop-color="#FF6B35"/><stop offset="100%" stop-color="#FF3D87"/></linearGradient></defs><rect width="110" height="110" rx="26" fill="url(#eg)"/><ellipse cx="38" cy="28" rx="30" ry="22" fill="rgba(255,255,255,0.18)"/><polygon points="10,98 55,44 100,98" fill="rgba(0,0,0,0.22)"/><rect x="52" y="48" width="6" height="11" rx="3" fill="rgba(255,255,255,0.55)"/><rect x="52" y="63" width="6" height="11" rx="3" fill="rgba(255,255,255,0.55)"/><rect x="52" y="78" width="6" height="11" rx="3" fill="rgba(255,255,255,0.55)"/><g transform="translate(34,12)"><rect x="4" y="2" width="34" height="44" rx="7" fill="white" opacity="0.96"/><rect x="8" y="6" width="26" height="14" rx="3" fill="rgba(0,0,0,0.16)"/><rect x="8" y="26" width="26" height="12" rx="3" fill="rgba(0,0,0,0.12)"/><rect x="0" y="7" width="6" height="12" rx="3" fill="rgba(0,0,0,0.32)"/><rect x="36" y="7" width="6" height="12" rx="3" fill="rgba(0,0,0,0.32)"/><rect x="0" y="25" width="6" height="12" rx="3" fill="rgba(0,0,0,0.32)"/><rect x="36" y="25" width="6" height="12" rx="3" fill="rgba(0,0,0,0.32)"/><rect x="8" y="2" width="9" height="5" rx="2" fill="#FFE500" opacity="0.9"/><rect x="25" y="2" width="9" height="5" rx="2" fill="#FFE500" opacity="0.9"/></g></svg>
+      <div><div class="wm-my">MY</div><div class="wm-l">License</div></div>
+    </div>
+    <div style="font-size:12px;font-weight:700;color:var(--mt)">גלה</div>
+  </div>
+
+  <div class="sec"><div class="sec-title">🚗 רכב החלום שלי</div></div>
+  <div class="dream-card">
+    <div class="dream-vis" onclick="genCar()">
+      <div class="dream-glow"></div><div class="dream-road"></div>
+      <div class="gen-spinner" id="csp"><div class="spin"></div><div style="font-size:12px;font-weight:700;color:#C084FC">מייצר...</div></div>
+      <svg viewBox="0 0 340 160" fill="none" style="width:84%;position:relative;z-index:2">
+        <ellipse cx="170" cy="148" rx="130" ry="8" fill="rgba(0,194,255,0.08)"/>
+        <ellipse cx="170" cy="142" rx="120" ry="6" fill="rgba(0,0,0,0.4)"/>
+        <polygon points="40,120 60,60 130,40 210,40 280,60 300,120" fill="#B8C5D0" stroke="#8FA8B8" stroke-width="1"/>
+        <polygon points="80,60 130,42 210,42 260,60 220,62 120,62" fill="#D0DDE8"/>
+        <polygon points="82,60 120,44 210,44 258,60 220,62 120,62" fill="rgba(0,194,255,0.25)" stroke="rgba(0,194,255,0.4)" stroke-width="1"/>
+        <polygon points="84,62 120,62 114,80 76,80" fill="rgba(0,194,255,0.18)"/>
+        <polygon points="220,62 256,62 264,80 226,80" fill="rgba(0,194,255,0.18)"/>
+        <polygon points="40,120 60,90 280,90 300,120" fill="#90A8B8"/>
+        <circle cx="95" cy="122" r="22" fill="#1A1A2A" stroke="#404060" stroke-width="2"/>
+        <circle cx="95" cy="122" r="13" fill="#2A2A3A"/><circle cx="95" cy="122" r="5" fill="#404060"/>
+        <circle cx="245" cy="122" r="22" fill="#1A1A2A" stroke="#404060" stroke-width="2"/>
+        <circle cx="245" cy="122" r="13" fill="#2A2A3A"/><circle cx="245" cy="122" r="5" fill="#404060"/>
+        <polygon points="40,120 44,104 58,104 60,120" fill="rgba(255,229,0,0.6)"/>
+        <rect x="282" y="90" width="16" height="8" rx="2" fill="rgba(255,61,135,0.7)"/>
+      </svg>
+      <div class="dtag" id="dtag">😎 Adam · Tesla Cybertruck</div>
+      <div class="aitag">✨ AI</div>
+    </div>
+    <div class="car-picker">
+      <div class="cp on" onclick="pcar(this,'Tesla Cybertruck')">⚡ Cybertruck</div>
+      <div class="cp" onclick="pcar(this,'Ferrari 488')">🔴 Ferrari</div>
+      <div class="cp" onclick="pcar(this,'Lamborghini')">🐂 Lambo</div>
+      <div class="cp" onclick="pcar(this,'Porsche 911')">🏎 Porsche</div>
+      <div class="cp" onclick="pcar(this,'G-Wagon')">🖤 G-Wagon</div>
+    </div>
+    <button class="gen-btn" id="gbtn" onclick="genCar()">✨ צור את הרכב שלי</button>
+  </div>
+
+  <div class="sec"><div class="sec-title">🗺️ מסלול שיעור אחרון</div></div>
+  <div class="map-card">
+    <div class="map-inner" onclick="openMap()">
+      <svg style="position:absolute;inset:0;width:100%;height:100%;opacity:0.25" viewBox="0 0 360 175">
+        <line x1="0" y1="87" x2="360" y2="87" stroke="white" stroke-width="0.5"/>
+        <line x1="0" y1="44" x2="360" y2="44" stroke="white" stroke-width="0.5"/>
+        <line x1="0" y1="131" x2="360" y2="131" stroke="white" stroke-width="0.5"/>
+        <line x1="90" y1="0" x2="90" y2="175" stroke="white" stroke-width="0.5"/>
+        <line x1="180" y1="0" x2="180" y2="175" stroke="white" stroke-width="0.5"/>
+        <line x1="270" y1="0" x2="270" y2="175" stroke="white" stroke-width="0.5"/>
+        <rect x="60" y="30" width="50" height="25" rx="3" fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
+        <rect x="160" y="55" width="70" height="30" rx="3" fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
+        <rect x="240" y="25" width="55" height="20" rx="3" fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
+      </svg>
+      <div class="map-route"></div>
+      <div class="map-car">🚗</div>
+      <div style="position:absolute;top:10px;left:11px;background:rgba(0,0,0,0.65);backdrop-filter:blur(6px);border:1px solid rgba(0,194,255,0.3);border-radius:8px;padding:3px 8px;font-size:10px;font-weight:700;color:var(--b)" id="map-label">📅 לא היו שיעורים עדיין</div>
+    </div>
+    <div class="map-footer">
+      <div>
+        <div style="font-size:13px;font-weight:700" id="map-route-txt">תל אביב ← הרצליה</div>
+        <div style="font-size:10px;color:var(--mt);margin-top:2px">45 דקות · ~18 ק"מ</div>
+      </div>
+      <button class="map-open-btn" onclick="openMap()">פתח במפות ↗</button>
+    </div>
+  </div>
+
+  <div class="sec"><div class="sec-title">💡 טיפ לנהיגה</div></div>
+  <div class="tips-card">
+    <div class="tip-slide active" id="tip0"><div class="tip-num">טיפ 1 מתוך 5</div><span class="tip-em">👀</span><div class="tip-title">תסתכל רחוק קדימה</div><div class="tip-text">נהגים מנוסים מסתכלים 12–15 שניות קדימה — לא על הרכב שלפניהם. ככה אין הפתעות ויש זמן לתגובה.</div></div>
+    <div class="tip-slide" id="tip1"><div class="tip-num">טיפ 2 מתוך 5</div><span class="tip-em">🤲</span><div class="tip-title">ידיים ב-9 וב-3</div><div class="tip-text">שכחו את 10 ו-2. היום מחזיקים ב-9 וב-3 — שליטה טובה יותר ובטוחה יותר, במיוחד עם כריות אוויר.</div></div>
+    <div class="tip-slide" id="tip2"><div class="tip-num">טיפ 3 מתוך 5</div><span class="tip-em">🪞</span><div class="tip-title">מראות כל 5–8 שניות</div><div class="tip-text">צור הרגל לבדוק מראות אחת ל-5–8 שניות. תמיד צריך לדעת מה מאחוריך ומהצדדים.</div></div>
+    <div class="tip-slide" id="tip3"><div class="tip-num">טיפ 4 מתוך 5</div><span class="tip-em">🛑</span><div class="tip-title">עצור חלק, לא בפתאומיות</div><div class="tip-text">התחל לבלום מוקדם ובעדינות. נסיעה חלקה = נהג מנוסה. פרנוה פתאומי = מתחיל.</div></div>
+    <div class="tip-slide" id="tip4"><div class="tip-num">טיפ 5 מתוך 5</div><span class="tip-em">😤</span><div class="tip-title">אל תיקח את הדרך אישית</div><div class="tip-text">אם מישהו קיצץ לך — נשום עמוק. נהג רגוע הוא נהג בטוח. כעס על הכביש מסיח את הדעת.</div></div>
+    <div class="tip-footer">
+      <div class="tip-dots" id="tdots"><div class="tip-dot on"></div><div class="tip-dot"></div><div class="tip-dot"></div><div class="tip-dot"></div><div class="tip-dot"></div></div>
+      <div class="tip-nav"><button class="tip-nav-btn" onclick="prevTip()">←</button><button class="tip-nav-btn" onclick="nextTip()">→</button></div>
+    </div>
+  </div>
+  <div style="height:14px"></div>
+</div>
+
+<!-- ═══ פרופיל ═══ -->
+<div class="scr" id="sp">
+  <div class="prof-cover"><div class="prof-cover-txt">MyLicense</div></div>
+  <div class="prof-body">
+    <div style="display:flex;align-items:flex-end;justify-content:space-between">
+      <div class="prof-av">😎</div>
+      <button style="background:var(--c2);border:1px solid var(--br);color:var(--tx);font-size:12px;font-weight:700;padding:7px 12px;border-radius:10px;cursor:pointer;margin-bottom:4px" onclick="openMo('bm')">⚙️ הגדרות</button>
+    </div>
+    <div class="prof-name">Adam</div>
+    <div class="prof-handle">תל אביב 📍 · בדרך לרישיון 🚗</div>
+    <div class="prof-stats">
+      <div class="pst"><div class="pst-num" id="p-lessons">0</div><div class="pst-lbl">שיעורים</div></div>
+      <div class="pst"><div class="pst-num" id="p-spent">₪0</div><div class="pst-lbl">הוצאתי</div></div>
+      <div class="pst"><div class="pst-num" id="p-pct">0%</div><div class="pst-lbl">מהדרך</div></div>
+    </div>
+    <div class="sec" style="padding:14px 0 10px"><div class="sec-title">🏆 הישגים</div></div>
+    <div class="ach-row" id="achievements">
+      <div class="ach lock" id="ach-first"><div class="ach-em">🚗</div><div class="ach-lbl">שיעור ראשון</div></div>
+      <div class="ach done"><div class="ach-em">📋</div><div class="ach-lbl" style="color:var(--y)">קיבלת טופס</div></div>
+      <div class="ach lock" id="ach-5"><div class="ach-em">5️⃣</div><div class="ach-lbl">5 שיעורים</div></div>
+      <div class="ach lock" id="ach-10"><div class="ach-em">🔟</div><div class="ach-lbl">10 שיעורים</div></div>
+      <div class="ach lock"><div class="ach-em">📝</div><div class="ach-lbl">תיאוריה</div></div>
+      <div class="ach lock"><div class="ach-em">🎉</div><div class="ach-lbl">רישיון!</div></div>
+    </div>
+    <div class="sec" style="padding:18px 0 10px"><div class="sec-title">🧑‍🏫 המורה שלי</div></div>
+    <div style="background:linear-gradient(135deg,#1A1200,#221500);border:1px solid rgba(245,200,66,0.25);border-radius:15px;padding:13px;display:flex;align-items:center;gap:12px">
+      <div style="width:46px;height:46px;border-radius:14px;background:linear-gradient(135deg,var(--go),var(--am));display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">👨‍🏫</div>
+      <div>
+        <div style="font-size:15px;font-weight:800">רונן כהן</div>
+        <div style="font-size:11px;color:var(--mt);margin-top:2px">בית ספר "הכביש הישר" · ת"א</div>
+        <div style="font-size:11px;color:var(--go);margin-top:4px;font-weight:700">📞 050-1234567</div>
+      </div>
+    </div>
+  </div>
+  <div style="height:14px"></div>
+</div>
+
+</div><!-- /scrwrap -->
+
+<!-- BOTTOM NAV -->
+<div class="bnav">
+  <button class="nb active" id="nb-sj" onclick="go('sj')">
+    <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/></svg>
+    מסע
+  </button>
+  <button class="nb" id="nb-se" onclick="go('se')">
+    <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+    גלה
+  </button>
+  <button class="nb" id="nb-sp" onclick="go('sp')">
+    <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+    פרופיל
+  </button>
+</div>
+
+<!-- MODAL: הוסף שיעור -->
+<div class="mo" id="lm" onclick="closeMo(event,'lm')">
+  <div class="ms-sheet">
+    <div class="mh"></div>
+    <div class="mtr"><div class="mti">🚗 הוסף שיעור</div><button class="mcls" onclick="closeId('lm')">✕</button></div>
+    <div class="mlbl">מספר שיעור</div>
+    <div class="m-num-row">
+      <button class="m-num-btn" onclick="chNum(1)">+</button>
+      <div class="m-num-val" id="lnum">1</div>
+      <button class="m-num-btn" onclick="chNum(-1)">−</button>
+    </div>
+    <div class="mlbl">תאריך</div>
+    <input class="m-inp" type="date" id="ldate">
+    <div class="mlbl">איך היה?</div>
+    <div class="mood-row">
+      <div class="mo-opt" onclick="pm(this)"><span class="e">😰</span><span class="n">קשה</span></div>
+      <div class="mo-opt sel" onclick="pm(this)"><span class="e">😊</span><span class="n">טוב</span></div>
+      <div class="mo-opt" onclick="pm(this)"><span class="e">🤩</span><span class="n">מדהים!</span></div>
+    </div>
+    <button class="svbtn" onclick="saveLesson()">שמור ✓</button>
+  </div>
+</div>
+
+<!-- MODAL: תקציב -->
+<div class="mo" id="bm" onclick="closeMo(event,'bm')">
+  <div class="ms-sheet">
+    <div class="mh"></div>
+    <div class="mtr"><div class="mti">💰 הגדרות תקציב</div><button class="mcls" onclick="closeId('bm')">✕</button></div>
+    <div class="mlbl">מחיר לשיעור</div>
+    <div class="price-row">
+      <div class="price-label">עלות לשיעור אחד</div>
+      <div style="display:flex;align-items:center;gap:4px">
+        <input class="price-inp" type="number" id="price-inp" value="220" min="50" max="999">
+        <span style="font-size:14px;font-weight:700;color:var(--go)">₪</span>
+      </div>
+    </div>
+    <div class="mlbl">מינימום שיעורים נדרשים</div>
+    <div class="price-row" style="margin-bottom:18px">
+      <div class="price-label">סה"כ שיעורים</div>
+      <div style="display:flex;align-items:center;gap:4px">
+        <input class="price-inp" type="number" id="total-inp" value="28" min="10" max="60">
+        <span style="font-size:14px;font-weight:700;color:var(--go)">שיעורים</span>
+      </div>
+    </div>
+    <button class="svbtn" onclick="saveBudget()">שמור הגדרות</button>
+  </div>
+</div>
+
+<!-- CELEBRATE -->
+<div class="cel" id="cel" onclick="this.classList.remove('show')">
+  <div class="cel-box">
+    <div class="cel-e" id="cele">🚗✨</div>
+    <div class="cel-t" id="celt">שיעור נוסף!</div>
+    <div class="cel-s" id="cels">ממשיך קדימה 🔥</div>
+  </div>
+</div>
+
+</div><!-- /phone -->
+
+<script>
+// STATE
+let lessons = {}, settings = { pricePerLesson: 220, totalRequired: 28 };
+let lessonNum = 1;
+
+// CLOCK
+function updateClock() {
+  const now = new Date();
+  const h = now.getHours().toString().padStart(2,'0');
+  const m = now.getMinutes().toString().padStart(2,'0');
+  document.getElementById('clock').textContent = h + ':' + m;
+}
+updateClock();
+setInterval(updateClock, 10000);
+
+// DATE
+const days = ['ראשון','שני','שלישי','רביעי','חמישי','שישי','שבת'];
+const months = ['ינואר','פברואר','מרץ','אפריל','מאי','יוני','יולי','אוגוסט','ספטמבר','אוקטובר','נובמבר','דצמבר'];
+const now = new Date();
+document.getElementById('today-date').textContent = 'יום ' + days[now.getDay()] + ', ' + now.getDate() + ' ' + months[now.getMonth()] + ' ' + now.getFullYear();
+
+// Set default date for lesson input
+const today = now.toISOString().split('T')[0];
+document.getElementById('ldate').value = today;
+
+// SPLASH
+setTimeout(() => { document.getElementById('splash').classList.add('gone'); }, 2000);
+
+// LOAD FROM FIREBASE
+window.loadFromFirebase = function(data) {
+  if (data.settings) {
+    settings = data.settings;
+    document.getElementById('price-inp').value = settings.pricePerLesson || 220;
+    document.getElementById('total-inp').value = settings.totalRequired || 28;
+  }
+  if (data.lessons) {
+    lessons = data.lessons;
+    renderLessons();
+  }
+  updateUI();
+};
+
+// NAV
+const IDS = ['sj','se','sp'];
+function go(id) {
+  IDS.forEach(s => {
+    document.getElementById(s).classList.remove('active');
+    document.getElementById('nb-'+s).classList.remove('active');
+  });
+  document.getElementById(id).classList.add('active');
+  document.getElementById('nb-'+id).classList.add('active');
+  if (id === 'sj') { setTimeout(anim, 300); }
+}
+
+// ROAD ANIM
+function anim() {
+  const count = Object.keys(lessons).length;
+  const total = settings.totalRequired || 28;
+  const pct = Math.min((count / total) * 70, 70);
+  document.getElementById('rfl').style.width = pct + '%';
+}
+
+// RENDER LESSONS
+function renderLessons() {
+  const list = document.getElementById('lessons-list');
+  list.innerHTML = '';
+  const arr = Object.entries(lessons).sort((a,b) => a[1].num - b[1].num);
+  arr.forEach(([key, l]) => {
+    const div = document.createElement('div');
+    div.className = 'lc';
+    div.innerHTML = `<div class="lc-top">
+      <div class="l-num">${l.num}</div>
+      <div class="l-info">
+        <div class="l-title">שיעור ${l.num}${l.num===1?' 🔥':''}</div>
+        <div class="l-meta"><span>📅 ${l.date}</span><span>⏱ 45 דק'</span></div>
+      </div>
+      <div class="l-mood">${l.mood}</div>
+    </div>`;
+    list.appendChild(div);
+  });
+  // update next lesson number
+  lessonNum = arr.length + 1;
+  document.getElementById('lnum').textContent = lessonNum;
+}
+
+// UPDATE UI
+function updateUI() {
+  const count = Object.keys(lessons).length;
+  const price = settings.pricePerLesson || 220;
+  const total = settings.totalRequired || 28;
+  const spent = count * price;
+  const totalCost = total * price;
+  const rem = Math.max(0, total - count);
+  const pct = Math.round((count / total) * 100);
+
+  document.getElementById('st-lessons').textContent = count;
+  document.getElementById('st-rem').textContent = rem;
+  document.getElementById('st-spent').textContent = '₪' + spent.toLocaleString();
+  document.getElementById('st-pct').textContent = pct + '%';
+  document.getElementById('prog-lbl').textContent = count + '/' + total;
+  document.getElementById('bv-spent').textContent = '₪' + spent.toLocaleString();
+  document.getElementById('bv-total').textContent = '₪' + totalCost.toLocaleString();
+  document.getElementById('bv-left').textContent = '₪' + (totalCost - spent).toLocaleString();
+  document.getElementById('bar-spent').style.width = Math.max(2, pct) + '%';
+  document.getElementById('p-lessons').textContent = count;
+  document.getElementById('p-spent').textContent = '₪' + spent.toLocaleString();
+  document.getElementById('p-pct').textContent = pct + '%';
+
+  // achievements
+  if (count >= 1) document.getElementById('ach-first').className = 'ach done', document.getElementById('ach-first').querySelector('.ach-lbl').style.color = 'var(--y)';
+  if (count >= 5) document.getElementById('ach-5').className = 'ach done', document.getElementById('ach-5').querySelector('.ach-lbl').style.color = 'var(--y)';
+  if (count >= 10) document.getElementById('ach-10').className = 'ach done', document.getElementById('ach-10').querySelector('.ach-lbl').style.color = 'var(--y)';
+
+  anim();
+}
+
+// SHOW SYNC
+function showSync() {
+  const el = document.getElementById('sync');
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 1800);
+}
+
+// LESSON MODAL
+function chNum(d) { lessonNum = Math.max(1, lessonNum + d); document.getElementById('lnum').textContent = lessonNum; }
+function pm(el) { document.querySelectorAll('#lm .mo-opt').forEach(o => o.classList.remove('sel')); el.classList.add('sel'); }
+
+function saveLesson() {
+  closeId('lm');
+  const mood = document.querySelector('#lm .mo-opt.sel .e').textContent;
+  const dateVal = document.getElementById('ldate').value;
+  const p = dateVal.split('-');
+  const dateStr = p[2] + '.' + p[1] + '.' + p[0].slice(2);
+  const num = lessonNum;
+
+  const newLesson = { num, date: dateStr, mood, timestamp: Date.now() };
+
+  // Save to Firebase
+  if (window._db) {
+    const lessonRef = window._dbPush(window._dbRef(window._db, 'adam/lessons'));
+    window._dbSet(lessonRef, newLesson).then(() => {
+      showSync();
+    });
+  }
+
+  // Update local state
+  const tempKey = 'local_' + Date.now();
+  lessons[tempKey] = newLesson;
+  renderLessons();
+  updateUI();
+
+  // Update map label
+  document.getElementById('map-label').textContent = '📅 שיעור ' + num + ' · ' + dateStr;
+
+  showCel('🚗✨', 'שיעור ' + num + ' נרשם!', 'ממשיך קדימה 🔥');
+}
+
+// BUDGET
+function saveBudget() {
+  settings.pricePerLesson = parseInt(document.getElementById('price-inp').value) || 220;
+  settings.totalRequired = parseInt(document.getElementById('total-inp').value) || 28;
+  closeId('bm');
+
+  // Save to Firebase
+  if (window._db) {
+    window._dbSet(window._dbRef(window._db, 'adam/settings'), settings).then(() => {
+      showSync();
+    });
+  }
+  updateUI();
+  showCel('💰', 'הגדרות עודכנו!', '₪' + settings.pricePerLesson + ' לשיעור · ' + settings.totalRequired + ' שיעורים');
+}
+
+// CAR
+let selC = 'Tesla Cybertruck';
+function pcar(el, n) { document.querySelectorAll('.cp').forEach(c => c.classList.remove('on')); el.classList.add('on'); selC = n; document.getElementById('dtag').textContent = '😎 Adam · ' + n; }
+function genCar() {
+  const sp = document.getElementById('csp'), b = document.getElementById('gbtn');
+  sp.classList.add('show'); b.textContent = 'מייצר...';
+  setTimeout(() => { sp.classList.remove('show'); b.textContent = '🔄 צור מחדש'; showCel('🚗✨', 'הרכב מוכן!', selC + ' מחכה לך!'); }, 2200);
+}
+
+// MAP
+function openMap() { window.open('https://www.google.com/maps/dir/Tel+Aviv,+Israel/Herzliya,+Israel', '_blank'); }
+
+// TIPS
+let tipIdx = 0;
+function showTip(i) {
+  document.querySelectorAll('.tip-slide').forEach((s,j) => s.classList.toggle('active', j===i));
+  document.querySelectorAll('.tip-dot').forEach((d,j) => d.classList.toggle('on', j===i));
+}
+function nextTip() { tipIdx = (tipIdx+1)%5; showTip(tipIdx); }
+function prevTip() { tipIdx = (tipIdx+4)%5; showTip(tipIdx); }
+
+// MODALS
+function openMo(id) { document.getElementById(id).classList.add('open'); }
+function closeId(id) { document.getElementById(id).classList.remove('open'); }
+function closeMo(e, id) { if (e.target === document.getElementById(id)) closeId(id); }
+
+// CELEBRATE
+function showCel(e, t, s) {
+  document.getElementById('cele').textContent = e;
+  document.getElementById('celt').textContent = t;
+  document.getElementById('cels').textContent = s;
+  const c = document.getElementById('cel');
+  c.classList.add('show');
+  setTimeout(() => c.classList.remove('show'), 2500);
+}
+</script>
+</div>
+</body>
+</html>
