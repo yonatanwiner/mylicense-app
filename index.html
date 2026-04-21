@@ -6,6 +6,8 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="MyLicense">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="manifest" href="data:application/json,{&quot;name&quot;:&quot;MyLicense&quot;,&quot;short_name&quot;:&quot;MyLicense&quot;,&quot;display&quot;:&quot;standalone&quot;,&quot;start_url&quot;:&quot;/&quot;,&quot;background_color&quot;:&quot;%230A0A0F&quot;,&quot;theme_color&quot;:&quot;%230A0A0F&quot;}">
 <meta name="theme-color" content="#0A0A0F">
 <title>MyLicense 🚗</title>
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@700;800;900&family=Heebo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
@@ -712,6 +714,10 @@ function celebrate(em,t,s){
   const c=document.getElementById('cel');c.classList.add('on');
   setTimeout(()=>c.classList.remove('on'),2600);
 }
+
+// Check if running as PWA
+const isStandalone = window.navigator.standalone === true || window.matchMedia('(display-mode: standalone)').matches;
+console.log('Running as PWA:', isStandalone);
 
 // Load data on startup
 loadAll();
