@@ -66,7 +66,7 @@ body{display:flex;justify-content:center;align-items:center;font-family:'Heebo',
   .phone{border-radius:44px;border:2px solid #222;height:90vh;}
   body{background:linear-gradient(135deg,#050508,#0D0D20,#050508);}
 }
-.sb{display:flex;align-items:center;justify-content:space-between;padding:calc(env(safe-area-inset-top) + 10px) 22px 8px;font-size:13px;font-weight:600;color:var(--mt);flex-shrink:0;}
+.sb{display:flex;align-items:center;justify-content:space-between;padding:10px 22px 8px;font-size:13px;font-weight:600;color:var(--mt);flex-shrink:0;padding-top:max(10px, calc(env(safe-area-inset-top) + 6px));}
 .scrwrap{flex:1;position:relative;overflow:hidden;}
 .scr{position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;opacity:0;pointer-events:none;transition:opacity 0.3s,transform 0.3s;transform:translateX(-16px);display:flex;flex-direction:column;}
 .scr::-webkit-scrollbar{display:none;}
@@ -212,6 +212,14 @@ body{display:flex;justify-content:center;align-items:center;font-family:'Heebo',
 .ach.done .ach-lbl{color:var(--y);}
 .ach.lock .ach-lbl{color:var(--mt);}
 
+/* MILESTONES LIST */
+.ms-item-row{display:flex;align-items:center;gap:14px;padding:14px 16px;border-bottom:1px solid var(--br);cursor:pointer;transition:background 0.15s;}
+.ms-item-row:active{background:rgba(245,200,66,0.05);}
+.ms-check{width:28px;height:28px;border-radius:50%;border:2px solid var(--br);display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--mt);flex-shrink:0;transition:all 0.2s;}
+.ms-check.done-check{background:linear-gradient(135deg,var(--go),var(--am));border-color:var(--go);color:var(--dk);font-weight:900;}
+.ms-item-txt{font-size:15px;font-weight:700;color:white;}
+.ms-item-row.done-row .ms-item-txt{color:var(--go);}
+
 /* SYNC INDICATOR */
 .sync{position:fixed;top:12px;left:50%;transform:translateX(-50%);background:rgba(0,230,118,0.15);border:1px solid rgba(0,230,118,0.4);border-radius:20px;padding:5px 14px;font-size:11px;font-weight:700;color:var(--gn);z-index:500;opacity:0;transition:opacity 0.3s;pointer-events:none;}
 .sync.show{opacity:1;}
@@ -338,6 +346,34 @@ body{display:flex;justify-content:center;align-items:center;font-family:'Heebo',
     </div>
   </div>
 
+  <div class="sec"><div class="sec-title">🏁 אבני דרך</div></div>
+  <div style="margin:0 15px 13px;background:var(--cd);border:1px solid var(--br);border-radius:16px;overflow:hidden;" id="milestones-card">
+    <div class="ms-item-row" id="ms-form" onclick="toggleMs('ms-form')">
+      <div class="ms-check done-check">✓</div>
+      <div class="ms-item-txt">קיבלת טופס רפואי</div>
+    </div>
+    <div class="ms-item-row" id="ms-lessons" onclick="toggleMs('ms-lessons')">
+      <div class="ms-check">○</div>
+      <div class="ms-item-txt">התחלת שיעורים</div>
+    </div>
+    <div class="ms-item-row" id="ms-highway" onclick="toggleMs('ms-highway')">
+      <div class="ms-check">○</div>
+      <div class="ms-item-txt">נסיעה ראשונה בכביש מהיר</div>
+    </div>
+    <div class="ms-item-row" id="ms-theory" onclick="toggleMs('ms-theory')">
+      <div class="ms-check">○</div>
+      <div class="ms-item-txt">עברת תיאוריה</div>
+    </div>
+    <div class="ms-item-row" id="ms-test" onclick="toggleMs('ms-test')">
+      <div class="ms-check">○</div>
+      <div class="ms-item-txt">עברת טסט</div>
+    </div>
+    <div class="ms-item-row" id="ms-license" onclick="toggleMs('ms-license')" style="border-bottom:none">
+      <div class="ms-check">○</div>
+      <div class="ms-item-txt">קיבלת רישיון! 🎉</div>
+    </div>
+  </div>
+
   <div class="sec"><div class="sec-title">📋 השיעורים שלי</div></div>
   <div id="lessons-list"></div>
   <button class="add-btn" onclick="openMo('lm')">+ הוסף שיעור</button>
@@ -447,21 +483,22 @@ body{display:flex;justify-content:center;align-items:center;font-family:'Heebo',
     </div>
     <div class="sec" style="padding:14px 0 10px"><div class="sec-title">🏆 הישגים</div></div>
     <div class="ach-row" id="achievements">
-      <div class="ach lock" id="ach-first"><div class="ach-em">🚗</div><div class="ach-lbl">שיעור ראשון</div></div>
-      <div class="ach done"><div class="ach-em">📋</div><div class="ach-lbl" style="color:var(--y)">קיבלת טופס</div></div>
-      <div class="ach lock" id="ach-5"><div class="ach-em">5️⃣</div><div class="ach-lbl">5 שיעורים</div></div>
-      <div class="ach lock" id="ach-10"><div class="ach-em">🔟</div><div class="ach-lbl">10 שיעורים</div></div>
-      <div class="ach lock"><div class="ach-em">📝</div><div class="ach-lbl">תיאוריה</div></div>
-      <div class="ach lock"><div class="ach-em">🎉</div><div class="ach-lbl">רישיון!</div></div>
+      <div class="ach lock" id="ach-first" onclick="toggleAch('ach-first')"><div class="ach-em">🚗</div><div class="ach-lbl">שיעור ראשון</div></div>
+      <div class="ach done" id="ach-form" onclick="toggleAch('ach-form')"><div class="ach-em">📋</div><div class="ach-lbl" style="color:var(--y)">קיבלת טופס</div></div>
+      <div class="ach lock" id="ach-highway" onclick="toggleAch('ach-highway')"><div class="ach-em">🛣️</div><div class="ach-lbl">כביש מהיר</div></div>
+      <div class="ach lock" id="ach-theory" onclick="toggleAch('ach-theory')"><div class="ach-em">📝</div><div class="ach-lbl">תיאוריה</div></div>
+      <div class="ach lock" id="ach-test" onclick="toggleAch('ach-test')"><div class="ach-em">🧪</div><div class="ach-lbl">טסט</div></div>
+      <div class="ach lock" id="ach-license" onclick="toggleAch('ach-license')"><div class="ach-em">🎉</div><div class="ach-lbl">רישיון!</div></div>
     </div>
     <div class="sec" style="padding:18px 0 10px"><div class="sec-title">🧑‍🏫 המורה שלי</div></div>
-    <div style="background:linear-gradient(135deg,#1A1200,#221500);border:1px solid rgba(245,200,66,0.25);border-radius:15px;padding:13px;display:flex;align-items:center;gap:12px">
+    <div style="background:linear-gradient(135deg,#1A1200,#221500);border:1px solid rgba(245,200,66,0.25);border-radius:15px;padding:13px;display:flex;align-items:center;gap:12px;cursor:pointer" onclick="openMo('tm')">
       <div style="width:46px;height:46px;border-radius:14px;background:linear-gradient(135deg,var(--go),var(--am));display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">👨‍🏫</div>
-      <div>
-        <div style="font-size:15px;font-weight:800">רונן כהן</div>
-        <div style="font-size:11px;color:var(--mt);margin-top:2px">בית ספר "הכביש הישר" · ת"א</div>
-        <div style="font-size:11px;color:var(--go);margin-top:4px;font-weight:700">📞 050-1234567</div>
+      <div style="flex:1">
+        <div style="font-size:15px;font-weight:800" id="t-name">רונן כהן</div>
+        <div style="font-size:11px;color:var(--mt);margin-top:2px" id="t-school">בית ספר "הכביש הישר" · ת"א</div>
+        <div style="font-size:11px;color:var(--go);margin-top:4px;font-weight:700" id="t-phone">📞 050-1234567</div>
       </div>
+      <div style="font-size:13px;color:var(--mt)">✏️</div>
     </div>
   </div>
   <div style="height:14px"></div>
@@ -505,6 +542,21 @@ body{display:flex;justify-content:center;align-items:center;font-family:'Heebo',
       <div class="mo-opt" onclick="pm(this)"><span class="e">🤩</span><span class="n">מדהים!</span></div>
     </div>
     <button class="svbtn" onclick="saveLesson()">שמור ✓</button>
+  </div>
+</div>
+
+<!-- MODAL: מורה -->
+<div class="mo" id="tm" onclick="closeMo(event,'tm')">
+  <div class="ms-sheet">
+    <div class="mh"></div>
+    <div class="mtr"><div class="mti">🧑‍🏫 המורה שלי</div><button class="mcls" onclick="closeId('tm')">✕</button></div>
+    <div class="mlbl">שם המורה</div>
+    <input class="m-inp" type="text" id="t-name-inp" placeholder="שם המורה שלך" value="רונן כהן">
+    <div class="mlbl">בית ספר לנהיגה</div>
+    <input class="m-inp" type="text" id="t-school-inp" placeholder='שם בית הספר' value='בית ספר "הכביש הישר" · ת"א'>
+    <div class="mlbl">טלפון</div>
+    <input class="m-inp" type="tel" id="t-phone-inp" placeholder="050-0000000" value="050-1234567">
+    <button class="svbtn" onclick="saveTeacher()">שמור ✓</button>
   </div>
 </div>
 
@@ -574,6 +626,29 @@ setTimeout(() => { document.getElementById('splash').classList.add('gone'); }, 2
 
 // LOAD FROM FIREBASE
 window.loadFromFirebase = function(data) {
+  if (data.teacher) {
+    document.getElementById('t-name').textContent = data.teacher.name || 'רונן כהן';
+    document.getElementById('t-school').textContent = data.teacher.school || 'בית ספר "הכביש הישר" · ת"א';
+    document.getElementById('t-phone').textContent = '📞 ' + (data.teacher.phone || '050-1234567');
+    document.getElementById('t-name-inp').value = data.teacher.name || 'רונן כהן';
+    document.getElementById('t-school-inp').value = data.teacher.school || 'בית ספר "הכביש הישר" · ת"א';
+    document.getElementById('t-phone-inp').value = data.teacher.phone || '050-1234567';
+  }
+  if (data.achievements) {
+    Object.entries(data.achievements).forEach(([id, done]) => {
+      const el = document.getElementById(id);
+      if (el && done) { el.className = 'ach done'; el.querySelector('.ach-lbl').style.color = 'var(--y)'; }
+    });
+  }
+  if (data.milestones) {
+    Object.entries(data.milestones).forEach(([id, done]) => {
+      const row = document.getElementById(id);
+      if (row && done) {
+        const check = row.querySelector('.ms-check');
+        check.classList.add('done-check'); check.textContent = '✓'; row.classList.add('done-row');
+      }
+    });
+  }
   if (data.settings) {
     settings = data.settings;
     document.getElementById('price-inp').value = settings.pricePerLesson || 220;
@@ -658,6 +733,66 @@ function updateUI() {
   if (count >= 10) document.getElementById('ach-10').className = 'ach done', document.getElementById('ach-10').querySelector('.ach-lbl').style.color = 'var(--y)';
 
   anim();
+}
+
+// TEACHER
+function saveTeacher() {
+  const name = document.getElementById('t-name-inp').value;
+  const school = document.getElementById('t-school-inp').value;
+  const phone = document.getElementById('t-phone-inp').value;
+  document.getElementById('t-name').textContent = name;
+  document.getElementById('t-school').textContent = school;
+  document.getElementById('t-phone').textContent = '📞 ' + phone;
+  closeId('tm');
+  if (window._db) {
+    window._dbSet(window._dbRef(window._db, 'adam/teacher'), { name, school, phone }).then(() => showSync());
+  }
+  showCel('🧑‍🏫', 'פרטי המורה עודכנו!', name + ' · ' + phone);
+}
+
+// ACHIEVEMENTS TOGGLE
+function toggleAch(id) {
+  const el = document.getElementById(id);
+  const isDone = el.classList.contains('done');
+  if (isDone) {
+    el.className = 'ach lock';
+    el.querySelector('.ach-lbl').style.color = '';
+  } else {
+    el.className = 'ach done';
+    el.querySelector('.ach-lbl').style.color = 'var(--y)';
+  }
+  // Save to Firebase
+  if (window._db) {
+    const achData = {};
+    ['ach-first','ach-form','ach-highway','ach-theory','ach-test','ach-license'].forEach(a => {
+      achData[a] = document.getElementById(a).classList.contains('done');
+    });
+    window._dbSet(window._dbRef(window._db, 'adam/achievements'), achData).then(() => showSync());
+  }
+}
+
+// MILESTONES TOGGLE
+function toggleMs(id) {
+  const row = document.getElementById(id);
+  const check = row.querySelector('.ms-check');
+  const isDone = check.classList.contains('done-check');
+  if (isDone) {
+    check.classList.remove('done-check');
+    check.textContent = '○';
+    row.classList.remove('done-row');
+  } else {
+    check.classList.add('done-check');
+    check.textContent = '✓';
+    row.classList.add('done-row');
+  }
+  // Save to Firebase
+  if (window._db) {
+    const msData = {};
+    ['ms-form','ms-lessons','ms-highway','ms-theory','ms-test','ms-license'].forEach(m => {
+      msData[m] = document.getElementById(m).querySelector('.ms-check').classList.contains('done-check');
+    });
+    window._dbSet(window._dbRef(window._db, 'adam/milestones'), msData).then(() => showSync());
+  }
 }
 
 // SHOW SYNC
