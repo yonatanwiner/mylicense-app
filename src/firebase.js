@@ -3,7 +3,7 @@
 
 import { initializeApp } from "firebase/app";
 import { getDatabase, ref, set, get, remove } from "firebase/database";
-import { getAuth, signInAnonymously } from "firebase/auth";
+import { getAuth, signInAnonymously, onAuthStateChanged } from "firebase/auth";
 
 const firebaseConfig = {
   apiKey: "AIzaSyDg-duYytMJito9hY9cDqZavBztPjqeVGI",
@@ -20,18 +20,38 @@ const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 const auth = getAuth(app);
 
+// Expose auth globally immediately
+window.auth = auth;
+
 // ============ Anonymous Sign-In ============
-// Every user gets a unique uid automatically
-signInAnonymously(auth).catch((error) => {
-  console.error("Auth error:", error);
-});
+// Sign in anonymously and wait for it to complete
+signInAnonymously(auth)
+  .then(() => {
+    console.log("✅ Firebase Auth: Signed in anonymously");
+    console.log("User ID:", auth.currentUser.uid);
+  })
+  .catch((error) => {
+    console.error("❌ Auth error:", error);
+  });
 
 // ============ window.storage API ============
-// Save, read, delete, list in user's private path
-
 window.storage = {
   set: async (key, value, shared = false) => {
     try {
+      // Wait for auth to be ready
+      await new Promise((resolve) => {
+        if (auth.currentUser) {
+          resolve();
+        } else {
+          const unsubscribe = onAuthStateChanged(auth, (user) => {
+            if (user) {
+              unsubscribe();
+              resolve();
+            }
+          });
+        }
+      });
+
       const user = auth.currentUser;
       if (!user) throw new Error("User not authenticated");
       
@@ -50,6 +70,20 @@ window.storage = {
 
   get: async (key, shared = false) => {
     try {
+      // Wait for auth to be ready
+      await new Promise((resolve) => {
+        if (auth.currentUser) {
+          resolve();
+        } else {
+          const unsubscribe = onAuthStateChanged(auth, (user) => {
+            if (user) {
+              unsubscribe();
+              resolve();
+            }
+          });
+        }
+      });
+
       const user = auth.currentUser;
       if (!user) throw new Error("User not authenticated");
       
@@ -110,10 +144,4 @@ window.storage = {
   }
 };
 
-// ============ Helper: Get current user ID ============
-export function getCurrentUserId() {
-  const user = auth.currentUser;
-  return user ? user.uid : null;
-}
-window.auth = auth;
 export { auth, db, app };
