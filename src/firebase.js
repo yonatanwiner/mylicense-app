@@ -115,5 +115,5 @@ export function getCurrentUserId() {
   const user = auth.currentUser;
   return user ? user.uid : null;
 }
-
+window.auth = auth;
 export { auth, db, app };
