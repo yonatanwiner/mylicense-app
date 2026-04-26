@@ -1,7 +1,9 @@
 // src/firebase.js
-// 🔥 החלף את הערכים האלה בערכים מ-Firebase Console שלך!
+// 🔥 Firebase setup with Anonymous Authentication
+
 import { initializeApp } from "firebase/app";
-import { getDatabase, ref, set, get, remove, query, orderByKey, startAt } from "firebase/database";
+import { getDatabase, ref, set, get, remove } from "firebase/database";
+import { getAuth, signInAnonymously } from "firebase/auth";
 
 const firebaseConfig = {
   apiKey: "AIzaSyDg-duYytMJito9hY9cDqZavBztPjqeVGI",
@@ -16,73 +18,102 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
+const auth = getAuth(app);
 
-// ============================================================
-// window.storage - אותו API שהאפליקציה כבר משתמשת בו!
-// פשוט עכשיו זה הולך ל-Firebase במקום לדפדפן
-// ============================================================
+// ============ Anonymous Sign-In ============
+// Every user gets a unique uid automatically
+signInAnonymously(auth).catch((error) => {
+  console.error("Auth error:", error);
+});
 
-const PRIVATE_PREFIX = "private";
-const SHARED_PREFIX = "shared";
+// ============ window.storage API ============
+// Save, read, delete, list in user's private path
 
 window.storage = {
-  // שמירה
   set: async (key, value, shared = false) => {
-    const path = shared
-      ? `${SHARED_PREFIX}/${key.replace(/:/g, "__")}`
-      : `${PRIVATE_PREFIX}/${getUserId()}/${key.replace(/:/g, "__")}`;
-    await set(ref(db, path), value);
-    return { key, value, shared };
+    try {
+      const user = auth.currentUser;
+      if (!user) throw new Error("User not authenticated");
+      
+      const userId = user.uid;
+      const path = shared
+        ? `shared/${key.replace(/:/g, "__")}`
+        : `private/${userId}/${key.replace(/:/g, "__")}`;
+      
+      await set(ref(db, path), value);
+      return { key, value, shared };
+    } catch (err) {
+      console.error("Storage.set error:", err);
+      throw err;
+    }
   },
 
-  // קריאה
   get: async (key, shared = false) => {
-    const path = shared
-      ? `${SHARED_PREFIX}/${key.replace(/:/g, "__")}`
-      : `${PRIVATE_PREFIX}/${getUserId()}/${key.replace(/:/g, "__")}`;
-    const snapshot = await get(ref(db, path));
-    if (!snapshot.exists()) throw new Error("Key not found");
-    return { key, value: snapshot.val(), shared };
+    try {
+      const user = auth.currentUser;
+      if (!user) throw new Error("User not authenticated");
+      
+      const userId = user.uid;
+      const path = shared
+        ? `shared/${key.replace(/:/g, "__")}`
+        : `private/${userId}/${key.replace(/:/g, "__")}`;
+      
+      const snapshot = await get(ref(db, path));
+      if (!snapshot.exists()) throw new Error("Key not found");
+      return { key, value: snapshot.val(), shared };
+    } catch (err) {
+      console.error("Storage.get error:", err);
+      throw err;
+    }
   },
 
-  // מחיקה
   delete: async (key, shared = false) => {
-    const path = shared
-      ? `${SHARED_PREFIX}/${key.replace(/:/g, "__")}`
-      : `${PRIVATE_PREFIX}/${getUserId()}/${key.replace(/:/g, "__")}`;
-    await remove(ref(db, path));
-    return { key, deleted: true, shared };
+    try {
+      const user = auth.currentUser;
+      if (!user) throw new Error("User not authenticated");
+      
+      const userId = user.uid;
+      const path = shared
+        ? `shared/${key.replace(/:/g, "__")}`
+        : `private/${userId}/${key.replace(/:/g, "__")}`;
+      
+      await remove(ref(db, path));
+      return { key, deleted: true, shared };
+    } catch (err) {
+      console.error("Storage.delete error:", err);
+      throw err;
+    }
   },
 
-  // רשימה לפי prefix
   list: async (prefix, shared = false) => {
-    const basePath = shared
-      ? `${SHARED_PREFIX}`
-      : `${PRIVATE_PREFIX}/${getUserId()}`;
-    const snapshot = await get(ref(db, basePath));
-    if (!snapshot.exists()) return { keys: [] };
-    const safePrefix = prefix.replace(/:/g, "__");
-    const allKeys = Object.keys(snapshot.val() || {});
-    const filtered = allKeys
-      .filter(k => k.startsWith(safePrefix))
-      .map(k => (shared ? `${SHARED_PREFIX}/${k}` : `${PRIVATE_PREFIX}/${getUserId()}/${k}`));
-    return { keys: filtered };
+    try {
+      const user = auth.currentUser;
+      if (!user) throw new Error("User not authenticated");
+      
+      const userId = user.uid;
+      const basePath = shared
+        ? `shared`
+        : `private/${userId}`;
+      
+      const snapshot = await get(ref(db, basePath));
+      if (!snapshot.exists()) return { keys: [] };
+      
+      const safePrefix = prefix.replace(/:/g, "__");
+      const allKeys = Object.keys(snapshot.val() || {});
+      const filtered = allKeys.filter(k => k.startsWith(safePrefix));
+      
+      return { keys: filtered };
+    } catch (err) {
+      console.error("Storage.list error:", err);
+      throw err;
+    }
   }
 };
 
-// עוזר לזהות משתמש נוכחי (מ-localStorage)
-function getUserId() {
-  try {
-    const u = localStorage.getItem("current_user_id");
-    return u || "anonymous";
-  } catch {
-    return "anonymous";
-  }
+// ============ Helper: Get current user ID ============
+export function getCurrentUserId() {
+  const user = auth.currentUser;
+  return user ? user.uid : null;
 }
 
-// שמירת userId ב-localStorage בעת לוגין
-export function setCurrentUserId(id) {
-  localStorage.setItem("current_user_id", id);
-}
-
-export { db };
+export { auth, db, app };
